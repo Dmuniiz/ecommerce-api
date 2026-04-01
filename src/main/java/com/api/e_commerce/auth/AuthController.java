@@ -13,7 +13,6 @@ public class AuthController {
 
     private final AuthService authService;
 
-
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@RequestBody @Valid LoginRequest loginRequest) {
 

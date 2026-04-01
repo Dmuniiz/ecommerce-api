@@ -10,6 +10,7 @@ import com.auth0.jwt.exceptions.JWTCreationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -24,11 +25,11 @@ public class TokenService {
 
     private final UserRepository userRepository;
 
-    @Value("\"${jwt.secret}\"")
+    @Value("${jwt.secret}")
     private String secretKey;
 
 
-    public String generateToken(User user){
+    public String generateToken(UserDetails user){
         // Implement token generation logic here (e.g., using JWT)
         try {
             Algorithm algorithm = Algorithm.HMAC256(encodedSecretKey());
@@ -43,18 +44,17 @@ public class TokenService {
         }
     }
 
-    public User verifyToken(String token){
+    public String extractSubject(String token) {
         // Implement token verification logic here (e.g., using JWT)
-        DecodedJWT decodedJWT;
         try {
-            Algorithm algorithm = Algorithm.HMAC256(secretKey);
-            JWTVerifier verifier = JWT.require(algorithm).withIssuer("auth-api").build();
+            Algorithm algorithm = Algorithm.HMAC256(encodedSecretKey());
 
-            decodedJWT = verifier.verify(token);
-            String email = decodedJWT.getSubject();
+            JWTVerifier verifier = JWT.require(algorithm)
+                    .withIssuer("auth-api")
+                    .build();
 
-            return userRepository.findByEmail(email)
-                    .orElseThrow(() -> new ValidationBusinessException("User not found for the provided token"));
+            DecodedJWT decodedJWT = verifier.verify(token);
+            return decodedJWT.getSubject();
 
         } catch (Exception ex) {
             throw new ValidationBusinessException("Invalid or expired token");

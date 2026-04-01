@@ -12,14 +12,13 @@ import org.springframework.stereotype.Service;
 public class AuthServiceImpl implements AuthService{
 
     private final AuthenticationManager manager;
-    private final UserServiceImpl userServiceImpl;
     private final TokenService tokenService;
 
 
     @Override
     public String login(String email, String password) {
 
-        userServiceImpl.loadUserByUsername(email);
+        //userServiceImpl.loadUserByUsername(email); -> manager
 
         var authenticationToken = manager.authenticate(new UsernamePasswordAuthenticationToken(email, password));
 

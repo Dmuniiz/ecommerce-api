@@ -4,6 +4,6 @@ CREATE TABLE users (
                           email varchar(100) not null unique,
                           password varchar(100) not null,
                           enable BOOLEAN NOT NULL DEFAULT TRUE,
-                          created_at VARCHAR(100) NOT NULL UNIQUE,
+                          created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
                           updated_at VARCHAR(30)
 );
