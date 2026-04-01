@@ -1,6 +1,7 @@
 package com.api.e_commerce.user;
 
 
+import com.api.e_commerce.auth.RegisterUserRequest;
 import com.api.e_commerce.role.Role;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -24,7 +25,7 @@ import java.util.UUID;
 public class User implements UserDetails {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(nullable = false)
@@ -46,6 +47,13 @@ public class User implements UserDetails {
             inverseJoinColumns = @JoinColumn(name = "role_id"))
     private List<Role> roles = new ArrayList<>();
 
+    public User(RegisterUserRequest data, String passwordEncoded, Role role) {
+        this.name = data.name();
+        this.email = data.email();
+        this.password = passwordEncoded;
+        this.createdAt = LocalDateTime.now();
+        addRole(role);
+    }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
@@ -55,6 +63,15 @@ public class User implements UserDetails {
     @Override
     public String getUsername() {
         return email;
+    }
+
+    @Override
+    public String getPassword() {
+        return password;
+    }
+
+    public void addRole(Role role){
+        this.roles.add(role);
     }
 
     @Override
@@ -76,4 +93,6 @@ public class User implements UserDetails {
     public boolean isEnabled() {
         return true;
     }
+
+
 }

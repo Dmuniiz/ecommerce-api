@@ -5,6 +5,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.util.UriComponentsBuilder;
 
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -20,5 +21,15 @@ public class AuthController {
 
         return ResponseEntity.ok(new AuthResponse(accessToken));
     }
+
+    @PostMapping("/register")
+    public ResponseEntity<AuthResponse> register(@RequestBody @Valid RegisterUserRequest data, UriComponentsBuilder componentsBuilder) {
+
+        var user = authService.register(data);
+        var uri = componentsBuilder.path("/api/v1/auth/{id}").buildAndExpand(user.getUsername()).toUri();
+
+        return ResponseEntity.created(uri).body(new AuthResponse(authService.login(user.getUsername(), data.password())));
+    }
+
 
 }
