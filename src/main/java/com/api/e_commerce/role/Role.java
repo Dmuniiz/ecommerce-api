@@ -12,11 +12,11 @@ public class Role implements GrantedAuthority {
     private Long id;
 
     @Enumerated(EnumType.STRING)
-    private RoleType nome;
+    private RoleType role_name;
 
     @Override
     public String getAuthority() {
-        return "ROLE_" + nome;
+        return "ROLE_" + role_name;
     }
 
 }

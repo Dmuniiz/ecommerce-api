@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.time.LocalDateTime;
 
-
 @Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -38,10 +37,7 @@ public class GlobalExceptionHandler {
 
     // 🟡 DTO (@Valid)
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ApiErrorResponse> handleValidation(
-            MethodArgumentNotValidException ex,
-            HttpServletRequest request
-    ) {
+    public ResponseEntity<ApiErrorResponse> handleValidation(MethodArgumentNotValidException ex, HttpServletRequest request) {
         log.warn("Validation error: {}", ex.getMessage());
 
         ApiErrorResponse response = ApiErrorResponse.builder()

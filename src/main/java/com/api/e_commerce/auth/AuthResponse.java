@@ -1,4 +1,3 @@
 package com.api.e_commerce.auth;
 
-public class AuthResponse {
-}
+public record AuthResponse(String accessToken) { }
