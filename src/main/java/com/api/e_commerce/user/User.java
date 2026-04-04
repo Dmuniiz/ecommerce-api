@@ -1,10 +1,10 @@
 package com.api.e_commerce.user;
 
 
-import com.api.e_commerce.auth.RegisterUserRequest;
 import com.api.e_commerce.role.Role;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
@@ -15,7 +15,6 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.UUID;
 
 @Entity
 @Table(name="users")
@@ -47,12 +46,12 @@ public class User implements UserDetails {
             inverseJoinColumns = @JoinColumn(name = "role_id"))
     private List<Role> roles = new ArrayList<>();
 
-    public User(RegisterUserRequest data, String passwordEncoded, Role role) {
-        this.name = data.name();
-        this.email = data.email();
+    public User(String name, String email, String passwordEncoded, LocalDateTime createdAt, List<Role> roles) {
+        this.name = name;
+        this.email = email;
         this.password = passwordEncoded;
-        this.createdAt = LocalDateTime.now();
-        addRole(role);
+        this.createdAt = createdAt;
+        this.roles = roles;
     }
 
     @Override

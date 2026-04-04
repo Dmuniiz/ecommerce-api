@@ -1,6 +1,5 @@
 package com.api.e_commerce.config.security;
 
-import com.api.e_commerce.auth.TokenService;
 import com.api.e_commerce.user.UserServiceImpl;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -11,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -21,34 +21,33 @@ import java.io.IOException;
 @RequiredArgsConstructor
 public class JwtFilter extends OncePerRequestFilter {
 
-    private final TokenService tokenService;
     private final UserServiceImpl userService;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         String token = extractTokenBearer(request);
 
-        if (token == null || token.isBlank()) {
+        /*if (token == null || token.isBlank()) {
             filterChain.doFilter(request, response);
-            return;
-        }
-
-        try {
-            String subject = tokenService.extractSubject(token);
-            var user = userService.loadUserByUsername(subject);
+            SecurityContextHolder.clearContext();
+        }else{
+            var user = userService.validateToken(token);
 
             UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
-
-            //set the authentication in the security context
-            SecurityContextHolder.getContext().setAuthentication(authentication);
-
-            filterChain.doFilter(request, response);
-        } catch (AuthenticationException ex) {
-            // In case of any exception during token verification, we can log the error and proceed without setting authentication
-            // This will allow the request to be processed as an unauthenticated request, and the security configuration will handle it accordingly
-            SecurityContextHolder.clearContext();
-            log.warn("JWT inválido para {} {}: {}", request.getMethod(), request.getRequestURI(), ex.getMessage());
+            SecurityContextHolder.getContext().setAuthentication(authentication);  //set the authentication in the security context
+            System.out.println("teste");
         }
+        filterChain.doFilter(request, response);*/
+
+        if(token != null){
+            System.out.println("teste");
+            var user = userService.validateToken(token);
+
+            UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
+            SecurityContextHolder.getContext().setAuthentication(authentication);  //set the authentication in the security context
+        }
+        filterChain.doFilter(request, response);
+
     }
 
     private String extractTokenBearer(HttpServletRequest request) {

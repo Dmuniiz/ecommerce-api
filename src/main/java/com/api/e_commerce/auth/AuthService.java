@@ -1,10 +1,10 @@
 package com.api.e_commerce.auth;
 
-import org.springframework.security.core.userdetails.UserDetails;
+
+import com.api.e_commerce.auth.dto.RegisterUserRequest;
 
 public interface AuthService {
 
-    String login(String email, String password);
-    UserDetails register(RegisterUserRequest data);
-
+    String getLoginToken(String email, String password);
+    String register(RegisterUserRequest data);
 }

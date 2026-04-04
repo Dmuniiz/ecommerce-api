@@ -1,13 +1,13 @@
 package com.api.e_commerce.auth;
 
-import com.api.e_commerce.role.RoleRepository;
+
+import com.api.e_commerce.auth.dto.RegisterUserRequest;
+import com.api.e_commerce.config.security.TokenService;
 import com.api.e_commerce.user.User;
-import com.api.e_commerce.user.UserRepository;
-import jakarta.transaction.Transactional;
+import com.api.e_commerce.user.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -16,29 +16,34 @@ import org.springframework.stereotype.Service;
 public class AuthServiceImpl implements AuthService{
 
     private final AuthenticationManager manager;
+
+    private final UserService userService;
     private final TokenService tokenService;
-    private final UserRepository userRepository;
-    private final RoleRepository roleRepository;
+
     private final PasswordEncoder passwordEncoder;
 
+
     @Override
-    public String login(String email, String password) {
+    public String getLoginToken(String email, String password) {
 
-        //userServiceImpl.loadUserByUsername(email); -> manager
-        var authenticationToken = manager.authenticate(new UsernamePasswordAuthenticationToken(email, password));
+        var user = userService.loadUserByUsername(email);
+        var authenticationToken = new UsernamePasswordAuthenticationToken(user.getUsername(), password);
 
-        return tokenService.generateToken((User) authenticationToken.getPrincipal());
+        var authenticationManager = manager.authenticate(authenticationToken);
+
+        var userDetails = (User) authenticationManager.getPrincipal();
+
+        return tokenService.generateToken(userDetails);
     }
 
     @Override
-    @Transactional
-    public UserDetails register(RegisterUserRequest data) {
-
-        var role = roleRepository.findRoleByRoleType(data.role()).orElseThrow(() -> new RuntimeException("Role not found"));
-        var user = new User(data, passwordEncoder.encode(data.password()), role);
-
-        return userRepository.save(user);
+    public String register(RegisterUserRequest data) {
+        String passwordEncoded = passwordEncoder.encode(data.password());
+        var user = userService.registerUser(data.name(), data.email(), passwordEncoded);
+        return tokenService.generateToken(user);
     }
+
+
 }
 
 

@@ -1,8 +1,7 @@
-package com.api.e_commerce.auth;
+package com.api.e_commerce.config.security;
 
 import com.api.e_commerce.config.exception.ValidationBusinessException;
 import com.api.e_commerce.user.User;
-import com.api.e_commerce.user.UserRepository;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
@@ -10,9 +9,7 @@ import com.auth0.jwt.exceptions.JWTCreationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
-
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -23,13 +20,11 @@ import java.util.Date;
 @RequiredArgsConstructor
 public class TokenService {
 
-    private final UserRepository userRepository;
-
     @Value("${jwt.secret}")
     private String secretKey;
 
 
-    public String generateToken(UserDetails user){
+    public String generateToken(User user){
         // Implement token generation logic here (e.g., using JWT)
         try {
             Algorithm algorithm = Algorithm.HMAC256(encodedSecretKey());

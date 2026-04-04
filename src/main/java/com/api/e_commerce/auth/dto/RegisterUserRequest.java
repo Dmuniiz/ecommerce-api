@@ -1,6 +1,5 @@
-package com.api.e_commerce.auth;
+package com.api.e_commerce.auth.dto;
 
-import com.api.e_commerce.role.RoleType;
 import jakarta.validation.constraints.*;
 
 public record RegisterUserRequest(
@@ -14,10 +13,7 @@ public record RegisterUserRequest(
 
         @NotBlank
         @Size(min = 8, message = "Password must be at least 8 characters")
-        String password,
-
-        @NotNull(message = "Role name cannot be null")
-        RoleType role
+        String password
 
         )
 { }

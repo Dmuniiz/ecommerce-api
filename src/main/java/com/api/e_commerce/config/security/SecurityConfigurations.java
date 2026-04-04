@@ -1,8 +1,10 @@
 package com.api.e_commerce.config.security;
 
 
+import com.api.e_commerce.auth.AuthService;
 import com.api.e_commerce.config.exception.CustomAccessDeniedExceptionImpl;
 import com.api.e_commerce.config.exception.CustomAuthenticationEntryPoint;
+import com.api.e_commerce.user.UserServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -29,33 +31,34 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class SecurityConfigurations {
 
-    private final CustomAccessDeniedExceptionImpl accessDeniedHandler;
     private final CustomAuthenticationEntryPoint authenticationEntryPoint;
-    private final JwtFilter jwtFilter;
-
-    @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        return http
-                .csrf(AbstractHttpConfigurer::disable)
-                .sessionManagement(sn -> sn.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-
-                .exceptionHandling(ex -> ex
-                        .authenticationEntryPoint(authenticationEntryPoint)
-                        .accessDeniedHandler(accessDeniedHandler))
-
-                .authorizeHttpRequests(req -> req
-                        .requestMatchers("/api/v1/auth/**").permitAll()
-                        .anyRequest().authenticated())
-
-                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
-
-                .build();
-    }
+    private final CustomAccessDeniedExceptionImpl accessDeniedHandler;
 
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
         //configuration -> is used to get my AuthenticationManager from the AuthenticationConfiguration
         return configuration.getAuthenticationManager();
+    }
+
+    @Bean
+    public SecurityFilterChain filterChain(
+            HttpSecurity http, JwtFilter jwtFilter) throws Exception {
+
+       http
+                .csrf(AbstractHttpConfigurer::disable)
+                .sessionManagement(sn -> sn.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+
+                .authorizeHttpRequests(req -> req
+                        .requestMatchers("/api/v1/auth/**").permitAll()
+                        .anyRequest().authenticated())
+
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint(authenticationEntryPoint)
+                        .accessDeniedHandler(accessDeniedHandler))
+
+                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+
+       return http.build();
     }
 
     @Bean

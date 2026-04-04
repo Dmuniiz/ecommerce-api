@@ -35,7 +35,7 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
     }
 
-    // 🟡 DTO (@Valid)
+    // DTO (@Valid)
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiErrorResponse> handleValidation(MethodArgumentNotValidException ex, HttpServletRequest request) {
         log.warn("Validation error: {}", ex.getMessage());
@@ -57,7 +57,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(ValidationBusinessException.class)
-    public ResponseEntity<ApiErrorResponse> handleBusiness( ValidationBusinessException ex,HttpServletRequest request) {
+    public ResponseEntity<ApiErrorResponse> handleBusiness(ValidationBusinessException ex, HttpServletRequest request) {
         log.warn("Business rule violation: {}", ex.getMessage());
 
         var fieldValidationErrors = ex.getErrors().stream()
