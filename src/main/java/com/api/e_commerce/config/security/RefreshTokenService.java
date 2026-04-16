@@ -1,7 +1,7 @@
 package com.api.e_commerce.config.security;
 
 
-import com.api.e_commerce.config.exception.ValidationBusinessException;
+import com.api.e_commerce.config.exception.ValidationException;
 import com.api.e_commerce.user.UserRepository;
 import com.auth0.jwt.exceptions.TokenExpiredException;
 import jakarta.transaction.Transactional;
@@ -21,9 +21,9 @@ public class RefreshTokenService {
     private final UserRepository userRepository;
 
     @Transactional
-    public RefreshToken createRefreshToken(Long userId){
+    public RefreshToken createRefreshToken(UUID userId){
 
-        var user = userRepository.findById(userId).orElseThrow(() -> new ValidationBusinessException("User not found"));
+        var user = userRepository.findById(userId).orElseThrow(() -> new ValidationException("User not found"));
 
         refreshTokenRepository.deleteByUser(user);
 
@@ -50,7 +50,7 @@ public class RefreshTokenService {
 
     public RefreshToken findRefreshTokenByToken(String refreshToken){
         var oldToken = refreshTokenRepository.findByToken(refreshToken)
-               .orElseThrow(() -> new ValidationBusinessException("Refresh token not found"));
+               .orElseThrow(() -> new ValidationException("Refresh token not found"));
 
         return verifyExpiration(oldToken);
     }

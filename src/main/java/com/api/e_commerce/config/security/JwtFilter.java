@@ -1,6 +1,7 @@
 package com.api.e_commerce.config.security;
 
 import com.api.e_commerce.user.UserServiceImpl;
+import com.auth0.jwt.exceptions.JWTVerificationException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -22,6 +23,7 @@ import java.io.IOException;
 public class JwtFilter extends OncePerRequestFilter {
 
     private final UserServiceImpl userService;
+    private final TokenService tokenService;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
@@ -34,13 +36,16 @@ public class JwtFilter extends OncePerRequestFilter {
                 String token = extractTokenBearer(header);
 
                 if(token != null && !token.isBlank()){
-                    var user = userService.validateToken(token);
+                    String username = tokenService.extractSubject(token);
+                    var user = userService.loadUserByUsername(username); // Validate the token and load user details
 
                     var authentication = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
+
                     SecurityContextHolder.getContext().setAuthentication(authentication);  //set the authentication in the security context
                 }
-            } catch (Exception e) {
+            } catch (JWTVerificationException e) {
                 log.warn("Received invalid auth token");
+                throw new JWTVerificationException("Invalid or expired token: " + e.getMessage());
             }
             filterChain.doFilter(request, response);
         }

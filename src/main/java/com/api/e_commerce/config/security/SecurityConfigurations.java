@@ -6,6 +6,7 @@ import com.api.e_commerce.config.exception.CustomAuthenticationEntryPoint;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchy;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -52,7 +53,10 @@ public class SecurityConfigurations {
                 .sessionManagement(sn -> sn.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
                 .authorizeHttpRequests(req -> req
+                        .requestMatchers("/api/v1/auth/me").hasRole("USER")
                         .requestMatchers("/api/v1/auth/**").permitAll()
+                        .requestMatchers(HttpMethod.GET,"/api/v1/users/me").hasRole("USER")
+                        .requestMatchers("/api/v1/users","/api/v1/users/{id}").hasRole("ADMIN")
                         .anyRequest().authenticated())
 
                 .exceptionHandling(ex -> ex

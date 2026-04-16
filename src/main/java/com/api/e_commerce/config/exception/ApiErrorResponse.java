@@ -21,12 +21,4 @@ public class ApiErrorResponse {
 
     @JsonFormat(pattern = "dd/MM/yyyy HH:mm:ss")
     private final LocalDateTime timestamp;
-
-    @Builder.Default
-    private final List<FieldError> errors = new ArrayList<>();
-
-    // método controlado (opcional)
-    public void addError(String field, String message) {
-        this.errors.add(new FieldError(field, message));
-    }
 }

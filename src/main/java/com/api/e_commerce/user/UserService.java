@@ -5,7 +5,8 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 
 public interface UserService extends UserDetailsService {
 
-    UserDetails validateToken(String token);
+    User updateUser();
+
     User registerUser(String name, String email, String password);
 
 }

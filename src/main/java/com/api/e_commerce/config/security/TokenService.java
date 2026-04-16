@@ -1,6 +1,6 @@
 package com.api.e_commerce.config.security;
 
-import com.api.e_commerce.config.exception.ValidationBusinessException;
+import com.api.e_commerce.config.exception.ValidationException;
 import com.api.e_commerce.user.User;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTVerifier;
@@ -35,7 +35,7 @@ public class TokenService {
                     .withExpiresAt(expireAt())
                     .sign(algorithm);
         } catch (JWTCreationException jwtEx){
-            throw new ValidationBusinessException("Failed to generate access JWT token");
+            throw new ValidationException("Failed to generate access JWT token");
         }
     }
 

@@ -49,20 +49,12 @@ public class GlobalExceptionHandler {
                 .timestamp(LocalDateTime.now())
                 .build();
 
-        ex.getBindingResult().getFieldErrors().forEach(error ->
-                response.addError(error.getField(), error.getDefaultMessage())
-        );
-
         return ResponseEntity.badRequest().body(response);
     }
 
-    @ExceptionHandler(ValidationBusinessException.class)
-    public ResponseEntity<ApiErrorResponse> handleBusiness(ValidationBusinessException ex, HttpServletRequest request) {
+    @ExceptionHandler(ValidationException.class)
+    public ResponseEntity<ApiErrorResponse> handleBusiness(ValidationException ex, HttpServletRequest request) {
         log.warn("Business rule violation: {}", ex.getMessage());
-
-        var fieldValidationErrors = ex.getErrors().stream()
-                .map(e -> new FieldError(e.fieldName(), e.message()))
-                .toList();
 
         ApiErrorResponse response = ApiErrorResponse.builder()
                 .status(HttpStatus.BAD_REQUEST.value())
@@ -71,7 +63,6 @@ public class GlobalExceptionHandler {
                 .path(request.getRequestURI())
                 .traceId(MDC.get("traceId"))
                 .timestamp(LocalDateTime.now())
-                .errors(fieldValidationErrors)
                 .build();
 
         return ResponseEntity.badRequest().body(response);

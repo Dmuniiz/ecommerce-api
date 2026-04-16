@@ -1,6 +1,6 @@
 package com.api.e_commerce.user;
 
-import com.api.e_commerce.config.exception.ValidationBusinessException;
+import com.api.e_commerce.config.exception.ValidationException;
 import com.api.e_commerce.config.security.TokenService;
 import com.api.e_commerce.role.Role;
 import com.api.e_commerce.role.RoleRepository;
@@ -12,18 +12,19 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
 
-    private final TokenService tokenService;
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+
         return userRepository.findByEmailIgnoreCase(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + username));
     }
@@ -35,26 +36,21 @@ public class UserServiceImpl implements UserService {
             throw new IllegalArgumentException("Email already in use: " + email);
         }
 
-        Role userRole = roleRepository.findByRoleName(RoleType.USER)
-                .orElseThrow(() -> new ValidationBusinessException("Default user role not found"));
+        List<Role> defaultRole  = roleRepository.findByRoleName(RoleType.USER)
+                .map(List::of)
+                .orElseGet(ArrayList::new);
+
+        System.out.println("defaultRole = " + defaultRole.getFirst().getAuthority());
 
         User newUser = new User(
-                null,
                 name,
                 email,
                 password,
-                LocalDateTime.now(),
-                List.of(userRole)
+                defaultRole
         );
 
+
         return userRepository.save(newUser);
-    }
-
-    @Override
-    public UserDetails validateToken(String token) {
-        String subject = tokenService.extractSubject(token);
-
-       return loadUserByUsername(subject);
     }
 
 }
