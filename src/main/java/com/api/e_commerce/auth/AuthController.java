@@ -2,8 +2,10 @@ package com.api.e_commerce.auth;
 
 
 import com.api.e_commerce.auth.dto.*;
-import com.api.e_commerce.auth.dto.TokenRefreshRequest;
+import com.api.e_commerce.auth.dto.RefreshTokenRequest;
+import com.api.e_commerce.role.Role;
 import com.api.e_commerce.user.User;
+import com.api.e_commerce.user.dto.UserResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -25,12 +27,12 @@ public class AuthController {
     }
 
     @PostMapping("/refresh-token")
-    public ResponseEntity<AuthResponse> refreshToken(@RequestHeader("Refresh-Token") @Valid TokenRefreshRequest request) {
+    public ResponseEntity<AuthResponse> refreshToken(@RequestHeader("Refresh-Token") @Valid RefreshTokenRequest request) {
         return ResponseEntity.ok(authService.refreshToken(request.refreshToken()));
     }
 
 
-    @PostMapping("/signup")
+    @PostMapping("/register")
     public ResponseEntity<Void> register(@RequestBody @Valid RegisterUserRequest data, UriComponentsBuilder componentsBuilder) {
         var newUser = authService.register(data);
         //
@@ -45,7 +47,8 @@ public class AuthController {
     @GetMapping("/me")
     public ResponseEntity<UserResponse> me(@AuthenticationPrincipal User user) {
         return ResponseEntity.ok(
-                new UserResponse(user.getId(), user.getName(), user.getEmail())
+                new UserResponse(user.getId(), user.getName(), user.getEmail(),
+                        user.getRoles(), user.getCreatedAt())
         );
     }
 

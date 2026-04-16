@@ -82,6 +82,7 @@ Represents a user address used for shipping or billing.
 ### Main fields
 
 - `id`
+- `userId`
 - `street`
 - `number`
 - `district`
@@ -91,7 +92,6 @@ Represents a user address used for shipping or billing.
 - `country`
 - `complement`
 - `type`
-- `createdAt`
 
 ### Relationships
 
@@ -137,8 +137,10 @@ Represents an item available for purchase.
 - `description`
 - `price`
 - `stock`
-- `active`
 - `sku`
+- `imageUrl`
+- `productStatus`
+- `categoryId`
 - `createdAt`
 - `updatedAt`
 

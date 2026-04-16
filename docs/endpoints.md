@@ -5,12 +5,12 @@
 
 ### **Auth:**
 
-| Método | Endpoint         | Descrição            | Auth   | Roles  | Status Code         |
-| :----- | :--------------- | :------------------- | :----- | :----- | :------------------ |
-| `POST` | `/auth/register` | Cadastro de usuários | Public | -      | `201`, `400`, `409` |
-| `POST` | `/auth/login`    | Login de usuários    | Public | -      | `200`, `401`        |
-| `POST` | `/auth/refresh`  | Renovar token        | Public | -      | `200`, `401`        |
-| `GET`  | `/auth/me`       | Usuário autenticado  | Bearer | `USER` | `200`, `401`        |
+| Método | Endpoint              | Descrição            | Auth   | Roles  | Status Code         |
+| :----- |:----------------------| :------------------- | :----- | :----- | :------------------ |
+| `POST` | `/auth/register`      | Cadastro de usuários | Public | -      | `201`, `400`, `409` |
+| `POST` | `/auth/login`         | Login de usuários    | Public | -      | `200`, `401`        |
+| `POST` | `/auth/refresh-token` | Renovar token        | Public | -      | `200`, `401`        |
+| `GET`  | `/auth/me`            | Usuário autenticado  | Bearer | `USER` | `200`, `401`        |
 
 
 

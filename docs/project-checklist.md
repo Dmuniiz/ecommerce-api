@@ -1,29 +1,32 @@
 ## Project Checklist
 
+### Draw.io and Dbdiagram.io
+- [ ] Use Case Diagram
+- [ ] Class Diagram
+- [ ] Sequence Diagram
+- [ ] Dbdiagram.io - DB Model
+
 ### Week 1: Foundation and Security
 - [X] Create the Spring Boot project
 - [X] Configure `PostgreSQL`
 - [X] Add base dependencies
-- [ ] Draw.io - Initial domain model
-- [ ] Dbdiagram.io - DB Model
-- [ ] Configure `Spring Security`
-- [ ] Configure JWT authentication
-- [ ] Add `Flyway`
+- [X] Configure `Spring Security`
+- [X] Configure JWT authentication
+- [x] Add `Flyway`
 - [X] Create initial project structure
-- [ ] Create `README.md`
-- [ ] Create `docs/domain-model.md`
-- [ ] Model `User` entity
-- [ ] Model `Role` entity
-- [ ] Model `Address` entity
-- [ ] Model `Category` entity
-- [ ] Model `Product` entity
+- [X] Create `README.md`
+- [X] Create `docs/domain-model.md`
+- [x] Model `User` entity
+- [x] Model `Role` entity
+- [] Model `Address` entity
+- [X] Model `Category` entity
+- [X] Model `Product` entity
 - [ ] Create DTOs for auth and catalog
-- [ ] Add MapStruct mappers for initial modules
-- [ ] Implement `POST /api/v1/auth/register`
-- [ ] Implement `POST /api/v1/auth/login`
-- [ ] Implement `GET /api/v1/auth/me`
-- [ ] Add role-based authorization
-- [ ] Add request validation
+- [X] Implement `POST /api/v1/auth/register`
+- [X] Implement `POST /api/v1/auth/login`
+- [X] Implement `GET /api/v1/auth/me`
+- [x] Add role-based authorization
+- [X] Add request validation
 - [x] Add global exception handling
 - [ ] Configure Swagger/OpenAPI
 - [ ] Write initial unit tests for authentication
@@ -37,7 +40,6 @@
 - [ ] Create `Cart` entity
 - [ ] Create `CartItem` entity
 - [ ] Create cart DTOs
-- [ ] Create cart mapper
 - [ ] Implement `GET /api/v1/cart`
 - [ ] Implement `POST /api/v1/cart/items`
 - [ ] Implement `PUT /api/v1/cart/items/{itemId}`
@@ -57,8 +59,6 @@
 - [ ] Create `PaymentProvider` enum
 - [ ] Create order DTOs
 - [ ] Create payment DTOs
-- [ ] Create order mapper
-- [ ] Create payment mapper
 - [ ] Implement `POST /api/v1/orders/checkout`
 - [ ] Implement `GET /api/v1/orders`
 - [ ] Implement `GET /api/v1/orders/{id}`
@@ -74,7 +74,7 @@
 - [ ] Add integration tests for orders and payments
 
 ### Week 4: Production Readiness
-- [ ] Refactor services and mappers
+- [ ] Refactor services and dtos for better separation of concerns
 - [ ] Improve test coverage
 - [ ] Add Testcontainers
 - [ ] Create `Dockerfile`
@@ -94,8 +94,9 @@
 - [ ] Review and update `README.md`
 
 ### Must-Have Features
-- [ ] JWT authentication
-- [ ] Role-based authorization
+- [x] JWT authentication
+- [ ] Refresh Tokens
+- [X] Role-based authorization
 - [ ] Product CRUD
 - [ ] Category CRUD
 - [ ] Cart management
@@ -115,12 +116,12 @@
 - [ ] Order status lifecycle
 - [ ] Payment status lifecycle
 - [ ] Swagger/OpenAPI
-- [ ] Flyway
-- [ ] MapStruct
+- [X] Flyway
 
 ### Optional Features
 - [ ] MORE User roles and permissions management (Manager, Support, etc.)
 - [ ] Coupon system
+- [ ] Refresh Token via Cookie HttpOnly - XSS protection
 - [ ] Inventory management
 - [ ] Refund flow
 - [ ] Product variants
