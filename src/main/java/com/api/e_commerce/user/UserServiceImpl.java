@@ -19,7 +19,6 @@ import java.util.List;
 public class UserServiceImpl implements UserService {
 
     private final TokenService tokenService;
-
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
 
@@ -54,6 +53,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserDetails validateToken(String token) {
         String subject = tokenService.extractSubject(token);
+
        return loadUserByUsername(subject);
     }
 

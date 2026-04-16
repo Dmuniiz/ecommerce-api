@@ -6,6 +6,7 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTCreationException;
+import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -23,7 +24,6 @@ public class TokenService {
     @Value("${jwt.secret}")
     private String secretKey;
 
-
     public String generateToken(User user){
         // Implement token generation logic here (e.g., using JWT)
         try {
@@ -40,7 +40,8 @@ public class TokenService {
     }
 
     public String extractSubject(String token) {
-        // Implement token verification logic here (e.g., using JWT)
+        DecodedJWT decodedJWT;
+
         try {
             Algorithm algorithm = Algorithm.HMAC256(encodedSecretKey());
 
@@ -48,11 +49,12 @@ public class TokenService {
                     .withIssuer("auth-api")
                     .build();
 
-            DecodedJWT decodedJWT = verifier.verify(token);
+            decodedJWT = verifier.verify(token);
+
             return decodedJWT.getSubject();
 
-        } catch (Exception ex) {
-            throw new ValidationBusinessException("Invalid or expired token");
+        } catch (JWTVerificationException ex) {
+            throw new JWTVerificationException("Invalid or expired token: "+ ex.getMessage());
         }
     }
 

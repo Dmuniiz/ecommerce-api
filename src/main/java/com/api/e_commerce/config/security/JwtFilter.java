@@ -25,35 +25,29 @@ public class JwtFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        String token = extractTokenBearer(request);
+        String header = request.getHeader("Authorization");
 
-        /*if (token == null || token.isBlank()) {
+        if (header == null || !header.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
-            SecurityContextHolder.clearContext();
         }else{
-            var user = userService.validateToken(token);
+            try{
+                String token = extractTokenBearer(header);
 
-            UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
-            SecurityContextHolder.getContext().setAuthentication(authentication);  //set the authentication in the security context
-            System.out.println("teste");
+                if(token != null && !token.isBlank()){
+                    var user = userService.validateToken(token);
+
+                    var authentication = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
+                    SecurityContextHolder.getContext().setAuthentication(authentication);  //set the authentication in the security context
+                }
+            } catch (Exception e) {
+                log.warn("Received invalid auth token");
+            }
+            filterChain.doFilter(request, response);
         }
-        filterChain.doFilter(request, response);*/
-
-        if(token != null){
-            System.out.println("teste");
-            var user = userService.validateToken(token);
-
-            UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
-            SecurityContextHolder.getContext().setAuthentication(authentication);  //set the authentication in the security context
-        }
-        filterChain.doFilter(request, response);
-
     }
 
-    private String extractTokenBearer(HttpServletRequest request) {
-        String bearerToken = request.getHeader("Authorization");
-
-        if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
+    private String extractTokenBearer(String bearerToken) {
+        if(bearerToken != null && bearerToken.startsWith("Bearer ")){
             return bearerToken.substring(7);
         }
         return null;
