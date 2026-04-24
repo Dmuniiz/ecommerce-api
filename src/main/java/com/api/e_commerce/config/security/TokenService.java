@@ -30,6 +30,8 @@ public class TokenService {
             Algorithm algorithm = Algorithm.HMAC256(encodedSecretKey());
             return JWT.create()
                     .withIssuer("auth-api")
+                    .withAudience("ecommerce-client")
+                    .withClaim("role", user.getRoles().getFirst().getAuthority())
                     .withSubject(user.getUsername())
                     .withIssuedAt(new Date(System.currentTimeMillis()))
                     .withExpiresAt(expireAt())
@@ -47,6 +49,7 @@ public class TokenService {
 
             JWTVerifier verifier = JWT.require(algorithm)
                     .withIssuer("auth-api")
+                    .withAudience("ecommerce-client")
                     .build();
 
             decodedJWT = verifier.verify(token);
@@ -54,7 +57,7 @@ public class TokenService {
             return decodedJWT.getSubject();
 
         } catch (JWTVerificationException ex) {
-            throw new JWTVerificationException("Invalid or expired token: "+ ex.getMessage());
+            throw new RuntimeException("Invalid or expired token: "+ ex.getMessage());
         }
     }
 

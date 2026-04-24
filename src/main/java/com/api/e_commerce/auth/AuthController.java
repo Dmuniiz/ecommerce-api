@@ -3,7 +3,6 @@ package com.api.e_commerce.auth;
 
 import com.api.e_commerce.auth.dto.*;
 import com.api.e_commerce.auth.dto.RefreshTokenRequest;
-import com.api.e_commerce.role.Role;
 import com.api.e_commerce.user.User;
 import com.api.e_commerce.user.dto.UserResponse;
 import jakarta.validation.Valid;

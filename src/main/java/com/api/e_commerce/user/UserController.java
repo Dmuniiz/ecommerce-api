@@ -23,17 +23,17 @@ public class UserController {
         );
     }
 
-    @PutMapping
+    /*@PutMapping
     public ResponseEntity<UserResponse> updateCurrentUser(@AuthenticationPrincipal User user, @RequestBody @Valid UserUpdateRequest data) {
         // Implement the logic to update the user's information
         // For example, you can accept a request body with the updated information and call a service method to perform the update
 
-
+        var updatedUser = userService.updateUser(user, data);
 
         return ResponseEntity.ok(
-                new UserResponse(user.getId(), user.getName(), user.getEmail(),
-                        user.getRoles(), user.getCreatedAt())
+                new UserResponse(updatedUser.getId(), updatedUser.getName(), updatedUser.getEmail(),
+                        updatedUser.getRoles(), updatedUser.getCreatedAt())
         );
-    }
+    }*/
 
 }

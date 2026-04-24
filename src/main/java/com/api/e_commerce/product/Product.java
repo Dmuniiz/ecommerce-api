@@ -1,4 +1,4 @@
-package com.api.e_commerce.product.model;
+package com.api.e_commerce.product;
 
 import com.api.e_commerce.product.categories.Category;
 import jakarta.persistence.*;

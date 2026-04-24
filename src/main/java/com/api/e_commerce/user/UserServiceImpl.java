@@ -5,6 +5,7 @@ import com.api.e_commerce.config.security.TokenService;
 import com.api.e_commerce.role.Role;
 import com.api.e_commerce.role.RoleRepository;
 import com.api.e_commerce.role.RoleType;
+import com.api.e_commerce.user.dto.UserUpdateRequest;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -28,6 +29,13 @@ public class UserServiceImpl implements UserService {
         return userRepository.findByEmailIgnoreCase(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + username));
     }
+
+    /*@Override
+    public User updateUser(User user, UserUpdateRequest data) {
+
+
+
+    }*/
 
     @Override
     @Transactional

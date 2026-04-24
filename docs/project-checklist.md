@@ -25,6 +25,10 @@
 - [X] Implement `POST /api/v1/auth/register`
 - [X] Implement `POST /api/v1/auth/login`
 - [X] Implement `GET /api/v1/auth/me`
+- [X] Implement `GET /api/v1/users/me`
+- [ ] Implement `PUT /api/v1/users/me`
+- [ ] Implement `PUT /api/v1/users`
+- [ ] Implement `PUT /api/v1/users/{id}`
 - [x] Add role-based authorization
 - [X] Add request validation
 - [x] Add global exception handling

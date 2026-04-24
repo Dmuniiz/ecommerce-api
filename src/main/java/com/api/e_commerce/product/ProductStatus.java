@@ -1,4 +1,4 @@
-package com.api.e_commerce.product.model;
+package com.api.e_commerce.product;
 
 public enum ProductStatus {
     DRAFT,          // Rascunho, sendo criado

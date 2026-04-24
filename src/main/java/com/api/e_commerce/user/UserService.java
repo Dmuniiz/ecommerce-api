@@ -1,11 +1,12 @@
 package com.api.e_commerce.user;
 
+import com.api.e_commerce.user.dto.UserUpdateRequest;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 
 public interface UserService extends UserDetailsService {
 
-    User updateUser();
+    /*User updateUser(User user, UserUpdateRequest data);*/
 
     User registerUser(String name, String email, String password);
 

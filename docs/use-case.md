@@ -88,6 +88,50 @@ The objective is to represent the core interactions between users, administrator
 
 ---
 
+### UC-03.0.1: Update Authenticated User Profile
+
+**Actors**
+- Authenticated User
+- Admin
+
+**Preconditions**
+- User is authenticated with valid JWT
+- If updating another user, requester must be admin
+- Admin can update any user
+- Regular user can only update their own profile
+- Input data is valid
+- Email must remain unique if changed
+- Password must be encrypted if changed
+- Only admin can change roles
+- Regular users cannot elevate their own privileges
+- Admin can change any user's roles
+- Regular users can only have `ROLE_USER`
+- Admin can assign `ROLE_ADMIN` to other users
+
+- **Main Flow**
+1. User sends update request with new profile data
+2. System validates JWT and permissions
+3. System validates input data
+4. System checks if email is being changed and if new email is unique
+5. System encrypts password if it is being changed
+6. System updates user profile
+7. System returns updated user information
+8. If admin updated another user's profile, system may return the updated user or a success message
+
+**Alternative Flows**
+- If JWT is invalid, system returns unauthorized error
+- If user tries to update another user's profile without admin role, system returns forbidden error
+- If input data is invalid, system returns validation errors
+- If email is changed to one that already exists, system returns error
+- If regular user tries to change their own roles, system returns forbidden error
+- If admin tries to assign invalid role, system returns error
+- If admin tries to change their own roles, system allows it but should not allow them to remove their own admin role if they are the only admin
+- If admin tries to remove their own admin role and they are the only admin, system returns error to prevent lockout
+- If admin tries to change another user's roles, system validates that the new roles are valid and returns error if not
+- If regular user tries to change their own email to one that already exists, system returns error
+- If regular user tries to change their own password, system encrypts it and updates successfully
+
+
 ## Catalog Use Cases
 
 ### UC-04: List Products
