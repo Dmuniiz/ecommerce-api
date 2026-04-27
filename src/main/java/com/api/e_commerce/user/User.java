@@ -2,19 +2,19 @@ package com.api.e_commerce.user;
 
 
 import com.api.e_commerce.role.Role;
-import com.api.e_commerce.role.RoleType;
+import com.api.e_commerce.user.dto.UserUpdateRequest;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.springframework.data.annotation.CreatedDate;
+import lombok.Setter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -23,6 +23,7 @@ import java.util.UUID;
 @Entity
 @Table(name="users")
 @Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
 public class User implements UserDetails {
@@ -37,6 +38,15 @@ public class User implements UserDetails {
     @Column(nullable = false, unique = true)
     private String email;
 
+    @Column(unique = true, nullable = false)
+    private String cpf;
+
+    @Column(name = "phone_number", nullable = false)
+    private String phoneNumber;
+
+    @Column(name = "birth_date")
+    private LocalDate birthDate;
+
     @JsonIgnore
     @Column(nullable = false)
     private String password;
@@ -47,6 +57,7 @@ public class User implements UserDetails {
     @Column(name = "updated_at")
     private Instant updatedAt;
 
+    @Column(name = "is_active", nullable = false, columnDefinition = "boolean default true")
     private Boolean isActive = true;
 
     @OneToMany(fetch = FetchType.EAGER)
@@ -75,10 +86,6 @@ public class User implements UserDetails {
     @Override
     public String getPassword() {
         return password;
-    }
-
-    public void addRole(Role role){
-        this.roles.add(role);
     }
 
     @Override

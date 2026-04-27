@@ -5,20 +5,21 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.*;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
 @Builder
-@Getter
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
-public class ApiErrorResponse {
+public record ApiErrorResponse(
 
-    private final int status;
-    private final String error;
-    private final String message;
-    private final String path;
-    private final String traceId;
+        int status,
+        String error,
+        String message,
+        String path,
+        String traceId,
 
-    @JsonFormat(pattern = "dd/MM/yyyy HH:mm:ss")
-    private final LocalDateTime timestamp;
+        @JsonFormat(pattern = "dd/MM/yyyy HH:mm:ss")
+        LocalDateTime timestamp,
+
+        List<FieldError> errors
+) {
 }

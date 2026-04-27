@@ -3,74 +3,84 @@ package com.api.e_commerce.config.exception;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 
+import java.lang.reflect.Field;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<ApiErrorResponse> handleInternalServerError(
-            Exception ex,
-            HttpServletRequest request
-    ) {
-        log.error("Unexpected server error", ex);
-
-        ApiErrorResponse response = ApiErrorResponse.builder()
-                .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                .error(HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase())
-                .message("An unexpected error occurred")
-                .path(request.getRequestURI())
-                .traceId(MDC.get("traceId"))
-                .timestamp(LocalDateTime.now())
-                .build();
-
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-    }
-
-    // DTO (@Valid)
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiErrorResponse> handleValidation(MethodArgumentNotValidException ex, HttpServletRequest request) {
-        log.warn("Validation error: {}", ex.getMessage());
 
-        ApiErrorResponse response = ApiErrorResponse.builder()
-                .status(HttpStatus.BAD_REQUEST.value())
-                .error(HttpStatus.BAD_REQUEST.getReasonPhrase())
-                .message("Field validation failed")
-                .path(request.getRequestURI())
-                .traceId(MDC.get("traceId"))
-                .timestamp(LocalDateTime.now())
-                .build();
+        List<FieldError> fieldErrorList = ex.getBindingResult()
+                .getFieldErrors()
+                .stream()
+                .map(error ->
+                        new FieldError(error.getField(), error.getDefaultMessage()))
+                .toList();
 
-        return ResponseEntity.badRequest().body(response);
+        log.warn("Validation failed for {} fields", fieldErrorList.size());
+
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, "Validation failed", request, fieldErrorList);
     }
 
     @ExceptionHandler(ValidationException.class)
     public ResponseEntity<ApiErrorResponse> handleBusiness(ValidationException ex, HttpServletRequest request) {
         log.warn("Business rule violation: {}", ex.getMessage());
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), request);
+    }
 
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<ApiErrorResponse> handleNotFound(NoResourceFoundException ex, HttpServletRequest request) {
+        return buildErrorResponse(HttpStatus.NOT_FOUND, ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ApiErrorResponse> handleDataIntegrity(DataIntegrityViolationException ex, HttpServletRequest request) {
+        log.warn("Data integrity violation: {}", ex.getMessage());
+
+        // Opcional: Você pode extrair a mensagem amigável que definiu no Service
+        String message = ex.getMessage() != null ? ex.getMessage() : "Data conflict or integrity violation";
+
+        return buildErrorResponse(HttpStatus.CONFLICT, message, request);
+    }
+
+    private ResponseEntity<ApiErrorResponse> buildErrorResponse(HttpStatus status, String message, HttpServletRequest request, List<FieldError> errors) {
         ApiErrorResponse response = ApiErrorResponse.builder()
-                .status(HttpStatus.BAD_REQUEST.value())
-                .error(HttpStatus.BAD_REQUEST.getReasonPhrase())
-                .message(ex.getMessage())
+                .status(status.value())
+                .error(status.getReasonPhrase())
+                .message(message)
                 .path(request.getRequestURI())
                 .traceId(MDC.get("traceId"))
                 .timestamp(LocalDateTime.now())
+                .errors(errors)
                 .build();
-
-        return ResponseEntity.badRequest().body(response);
+        return ResponseEntity.status(status).body(response);
     }
 
-    //ResourceNotFoundException
+
+    private ResponseEntity<ApiErrorResponse> buildErrorResponse(HttpStatus status, String message, HttpServletRequest request) {
+        return buildErrorResponse(status, message, request, null);
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ApiErrorResponse> handleInternalServerError(Exception ex, HttpServletRequest request) {
+        log.error("Unexpected server error", ex);
+        return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected error occurred", request);
+    }
+
     //ConstraintViolationException
     //MethodArgumentTypeMismatchException
     //HttpRequestMethodNotSupportedException
-
 }

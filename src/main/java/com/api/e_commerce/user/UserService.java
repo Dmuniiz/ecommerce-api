@@ -6,8 +6,8 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 
 public interface UserService extends UserDetailsService {
 
-    /*User updateUser(User user, UserUpdateRequest data);*/
+    User update(User user, UserUpdateRequest data);
 
-    User registerUser(String name, String email, String password);
+    User create(String name, String email, String password);
 
 }

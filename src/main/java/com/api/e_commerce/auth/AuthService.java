@@ -39,9 +39,9 @@ public class AuthService {
     }
 
 
-    public User register(RegisterUserRequest data) {
+    public User createAuthUser(RegisterUserRequest data) {
         String passwordEncoded = passwordEncoder.encode(data.password());
-        return userService.registerUser(data.name(), data.email(), passwordEncoded);
+        return userService.create(data.name(), data.email(), passwordEncoded);
     }
 
     public AuthResponse refreshToken(String refreshToken) {

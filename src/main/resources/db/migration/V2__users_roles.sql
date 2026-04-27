@@ -4,8 +4,10 @@ CREATE TABLE users (
                        name VARCHAR(100) NOT NULL,
                        email VARCHAR(150) NOT NULL UNIQUE,
                        password VARCHAR(255) NOT NULL,
-
-                       enabled BOOLEAN NOT NULL DEFAULT TRUE,
+                       cpf VARCHAR(14) UNIQUE,
+                       phone_number VARCHAR(20),
+                       birth_date DATE,
+                       is_active BOOLEAN NOT NULL DEFAULT TRUE,
 
                        created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
                        updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP

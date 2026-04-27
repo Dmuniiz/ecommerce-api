@@ -1,7 +1,6 @@
 package com.api.e_commerce.user;
 
 import com.api.e_commerce.config.exception.ValidationException;
-import com.api.e_commerce.config.security.TokenService;
 import com.api.e_commerce.role.Role;
 import com.api.e_commerce.role.RoleRepository;
 import com.api.e_commerce.role.RoleType;
@@ -12,7 +11,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -30,35 +28,45 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + username));
     }
 
-    /*@Override
-    public User updateUser(User user, UserUpdateRequest data) {
+    @Override
+    @Transactional
+    public User update(User user, UserUpdateRequest data) {
+        if (data.email() != null && !data.email().equals(user.getEmail())) {
+            if (userRepository.existsByEmail(data.email())) {
+                throw new ValidationException("Email is already being used");
+            }
+            user.setEmail(data.email());
+        }
 
+        if (data.name() != null) user.setName(data.name());
+        if (data.cpf() != null) user.setCpf(data.cpf());
+        if (data.phoneNumber() != null) user.setPhoneNumber(data.phoneNumber());
+        if (data.birthDate() != null) user.setBirthDate(data.birthDate());
 
-
-    }*/
+        return userRepository.save(user);
+    }
 
     @Override
     @Transactional
-    public User registerUser(String name, String email, String password) {
-        if(userRepository.existsByEmail(email)){
+    public User create(String name, String email, String password) {
+        if (userRepository.existsByEmail(email)) {
             throw new IllegalArgumentException("Email already in use: " + email);
         }
 
-        List<Role> defaultRole  = roleRepository.findByRoleName(RoleType.USER)
+        List<Role> defaultRoleUser = roleRepository.findByRoleName(RoleType.USER)
                 .map(List::of)
                 .orElseGet(ArrayList::new);
 
-        System.out.println("defaultRole = " + defaultRole.getFirst().getAuthority());
-
-        User newUser = new User(
+        var constructorUser = new User(
                 name,
                 email,
                 password,
-                defaultRole
+                defaultRoleUser
         );
 
-
-        return userRepository.save(newUser);
+        return userRepository.save(constructorUser);
     }
+
+
 
 }

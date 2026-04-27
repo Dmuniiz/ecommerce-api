@@ -32,8 +32,8 @@ public class AuthController {
 
 
     @PostMapping("/register")
-    public ResponseEntity<Void> register(@RequestBody @Valid RegisterUserRequest data, UriComponentsBuilder componentsBuilder) {
-        var newUser = authService.register(data);
+    public ResponseEntity<Void> createAuthUser(@RequestBody @Valid RegisterUserRequest data, UriComponentsBuilder componentsBuilder) {
+        var newUser = authService.createAuthUser(data);
         //
         var uri = componentsBuilder
                 .path("/api/v1/auth/me")
@@ -45,10 +45,7 @@ public class AuthController {
 
     @GetMapping("/me")
     public ResponseEntity<UserResponse> me(@AuthenticationPrincipal User user) {
-        return ResponseEntity.ok(
-                new UserResponse(user.getId(), user.getName(), user.getEmail(),
-                        user.getRoles(), user.getCreatedAt())
-        );
+        return ResponseEntity.ok(UserResponse.fromEntity(user));
     }
 
 }
