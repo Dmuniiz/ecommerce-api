@@ -29,6 +29,7 @@ public class Product {
     @Column(nullable = false, unique = true)
     private String sku;
 
+    @Column(name = "image_url", nullable = false)
     private String imageUrl;
 
     @Column(nullable = false, columnDefinition = "TEXT", length=1000)
@@ -44,7 +45,7 @@ public class Product {
     @Column(nullable = false)
     private Integer stock;
 
-    @Column(nullable = false)
+    @Column(name= "status",nullable = false)
     @Enumerated(EnumType.STRING)
     private ProductStatus productStatus;
 

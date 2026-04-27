@@ -46,7 +46,7 @@ public class AddressService {
         validateAddressField(errors, "state", addressRequest.state(), client.state());
 
         if (!errors.isEmpty()) {
-            throw new ValidationException("Divergent data for CEP:");
+            throw new ValidationException("Divergent data for POSTAL CODE:");
         }
 
         return addressRepository.save(new Address(addressRequest, userId));

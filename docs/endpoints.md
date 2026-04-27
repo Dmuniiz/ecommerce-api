@@ -16,12 +16,12 @@
 
 ### **Users:**
 
-| Método | Endpoint      | Descrição               | Auth   | Roles   | Status Code         |
-| :----- | :------------ | :---------------------- | :----- | :------ | :------------------ |
-| `GET`  | `/users/me`   | Dados do usuário logado | Bearer | `USER`  | `200`, `401`        |
-| `PUT`  | `/users/me`   | Atualiza usuário        | Bearer | `USER`  | `200`, `400`, `401` |
-| `GET`  | `/users`      | Lista usuários          | Bearer | `ADMIN` | `200`, `403`        |
-| `GET`  | `/users/{id}` | Busca usuário por ID    | Bearer | `ADMIN` | `200`, `404`, `403` |
+| Método | Endpoint      | Descrição               | Auth   | Roles         | Status Code         |
+| :----- | :------------ | :---------------------- | :----- |:--------------| :------------------ |
+| `GET`  | `/users/me`   | Dados do usuário logado | Bearer | `USER`        | `200`, `401`        |
+| `PUT`  | `/users/me`   | Atualiza usuário        | Bearer | `USER`, `ADMIN` | `200`, `400`, `401` |
+| `GET`  | `/users`      | Lista usuários          | Bearer | `ADMIN`       | `200`, `403`        |
+| `GET`  | `/users/{id}` | Busca usuário por ID    | Bearer | `ADMIN`       | `200`, `404`, `403` |
 
 
 
@@ -49,12 +49,12 @@
 
 ### **Cart:**
 | Método   | Endpoint               | Descrição              | Auth   | Roles  | Status Code         |
-| :------- | :--------------------- | :--------------------- | :----- | :----- | :------------------ |
+| :------- |:-----------------------| :--------------------- | :----- | :----- | :------------------ |
 | `GET`    | `/cart`                | Retorna carrinho       | Bearer | `USER` | `200`, `401`        |
 | `POST`   | `/cart/items`          | Adiciona item          | Bearer | `USER` | `200`, `400`, `404` |
 | `PUT`    | `/cart/items/{itemId}` | Atualiza item          | Bearer | `USER` | `200`, `400`, `404` |
 | `DELETE` | `/cart/items/{itemId}` | Remove item específico | Bearer | `USER` | `204`, `404`        |
-| `DELETE` | `/cart/items`          | Limpa carrinho         | Bearer | `USER` | `204`               |
+| `DELETE` | `/cart/items/clear`    | Limpa carrinho         | Bearer | `USER` | `204`               |
 
 
 ### **Orders:**

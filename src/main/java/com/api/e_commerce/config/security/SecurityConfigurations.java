@@ -1,8 +1,8 @@
 package com.api.e_commerce.config.security;
 
 
-import com.api.e_commerce.config.exception.CustomAccessDeniedExceptionImpl;
-import com.api.e_commerce.config.exception.CustomAuthenticationEntryPoint;
+import com.api.e_commerce.config.exception.custom.CustomAccessDeniedExceptionImpl;
+import com.api.e_commerce.config.exception.custom.CustomAuthenticationEntryPoint;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

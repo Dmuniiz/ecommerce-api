@@ -1,147 +1,213 @@
-## Project Checklist
+# 🛒 E-Commerce API - Project Checklist
 
-### Draw.io and Dbdiagram.io
-- [ ] Use Case Diagram
-- [ ] Class Diagram
-- [ ] Sequence Diagram
-- [ ] Dbdiagram.io - DB Model
+## Tech Stack
 
-### Week 1: Foundation and Security
-- [X] Create the Spring Boot project
-- [X] Configure `PostgreSQL`
-- [X] Add base dependencies
-- [X] Configure `Spring Security`
-- [X] Configure JWT authentication
-- [x] Add `Flyway`
-- [X] Create initial project structure
-- [X] Create `README.md`
-- [X] Create `docs/domain-model.md`
-- [x] Model `User` entity
-- [x] Model `Role` entity
-- [] Model `Address` entity
-- [X] Model `Category` entity
-- [X] Model `Product` entity
-- [ ] Create DTOs for auth and catalog
-- [X] Implement `POST /api/v1/auth/register`
-- [X] Implement `POST /api/v1/auth/login`
-- [X] Implement `GET /api/v1/auth/me`
-- [X] Implement `GET /api/v1/users/me`
-- [ ] Implement `PUT /api/v1/users/me`
-- [ ] Implement `PUT /api/v1/users`
-- [ ] Implement `PUT /api/v1/users/{id}`
-- [x] Add role-based authorization
-- [X] Add request validation
-- [x] Add global exception handling
-- [ ] Configure Swagger/OpenAPI
-- [ ] Write initial unit tests for authentication
+- Java 21
+- Spring Boot
+- Spring Security
+- JWT + Refresh Token
+- PostgreSQL
+- Flyway
+- Docker
+- Redis
+- Stripe Gateway Payment
+- Junit + Mockito
+- API Clients Validations
+- Testcontainers
+- Golang
 
-### Week 2: Catalog and Cart
-- [ ] Implement category CRUD
-- [ ] Implement product CRUD
-- [ ] Add product pagination
-- [ ] Add product sorting
-- [ ] Add basic product filtering
-- [ ] Create `Cart` entity
-- [ ] Create `CartItem` entity
-- [ ] Create cart DTOs
-- [ ] Implement `GET /api/v1/cart`
-- [ ] Implement `POST /api/v1/cart/items`
-- [ ] Implement `PUT /api/v1/cart/items/{itemId}`
-- [ ] Implement `DELETE /api/v1/cart/items/{itemId}`
-- [ ] Implement cart total calculation
-- [ ] Prevent duplicated cart items for the same product
-- [ ] Add unit tests for product rules
-- [ ] Add unit tests for cart rules
-- [ ] Add integration tests for repositories
+---
 
-### Week 3: Orders and Payments
-- [ ] Create `Order` entity
-- [ ] Create `OrderItem` entity
-- [ ] Create `Payment` entity
-- [ ] Create `OrderStatus` enum
-- [ ] Create `PaymentStatus` enum
-- [ ] Create `PaymentProvider` enum
-- [ ] Create order DTOs
-- [ ] Create payment DTOs
-- [ ] Implement `POST /api/v1/orders/checkout`
-- [ ] Implement `GET /api/v1/orders`
-- [ ] Implement `GET /api/v1/orders/{id}`
-- [ ] Validate stock during checkout
-- [ ] Copy product price into `OrderItem`
-- [ ] Clear cart after checkout
-- [ ] Create `PaymentGateway` interface
-- [ ] Implement `FakePaymentGateway`
-- [ ] Implement `POST /api/v1/payments/intent`
-- [ ] Start Stripe integration
-- [ ] Add initial Stripe webhook endpoint
-- [ ] Add unit tests for checkout flow
-- [ ] Add integration tests for orders and payments
+# Architecture & Documentation
 
-### Week 4: Production Readiness
-- [ ] Refactor services and dtos for better separation of concerns
-- [ ] Improve test coverage
-- [ ] Add Testcontainers
-- [ ] Create `Dockerfile`
-- [ ] Create `docker-compose.yml`
-- [ ] Run API with Docker
-- [ ] Add structured logging
-- [ ] Add `Spring Boot Actuator`
-- [ ] Expose Prometheus metrics
-- [ ] Configure Grafana
-- [ ] Add rate limiting with `Bucket4j`
-- [ ] Protect login endpoint with rate limiting
-- [ ] Protect register endpoint with rate limiting
-- [ ] Protect payment endpoints with rate limiting
-- [ ] Create `docs/architecture.md`
-- [ ] Create `docs/api-contract.md`
-- [ ] Create `docs/testing-strategy.md`
-- [ ] Review and update `README.md`
+- [x] README.md
+- [x] Domain documentation
+- [X] Use Case Diagram / Doc
+- [X] Class Diagram / Doc
+- [ ] Architecture documentation
+- [ ] Testing strategy documentation
+- [ ] Security documentation
+- [ ] Deployment documentation
 
-### Must-Have Features
+---
+
+# Authentication & Security
+
+- [x] User registration
+- [x] User login
 - [x] JWT authentication
-- [ ] Refresh Tokens
-- [X] Role-based authorization
-- [ ] Product CRUD
-- [ ] Category CRUD
-- [ ] Cart management
-- [ ] Checkout flow
-- [ ] Order management
-- [ ] Stock validation
-- [ ] Validation and exception handling
-- [ ] Unit tests
-- [ ] Integration tests
+- [x] Refresh tokens
+- [x] Role-based authorization
+- [x] Request validation
+- [x] Global exception handling
+- [x] Rate limiting
+- [X] Refresh token rotation
 
-### Should-Have Features
-- [ ] Product search and filtering
-- [ ] Address management
-- [ ] Payment abstraction
+### Pending Security Features
+- [ ] Logout endpoint
+- [ ] Forgot password
+- [ ] Reset password
+- [ ] Email verification
+- [ ] Security headers
+- [ ] Brute-force protection
+
+---
+
+# User Module
+
+### Completed
+- [x] User entity
+- [x] Role entity
+- [x] `GET /users/me`
+- [x] `PUT /users/me`
+- [X] Address entity
+
+### Pending
+- [ ] Address CRUD:
+- `PUT /api/v1/addresses/{id}`
+- `DELETE /api/v1/addresses/{id}`
+- [ ] Admin user management:
+- `GET /api/v1/users`
+- `PUT /api/v1/users/{id}`
+- `DELETE /api/v1/users/{id}`
+- [ ] User deletion
+
+---
+
+# Product Catalog
+
+### Completed
+- [x] Category entity + table
+- [x] Product entity + table
+
+### Pending
+- [ ] Category CRUD
+- [ ] Product CRUD
+- [ ] Product pagination
+- [ ] Product sorting
+- [ ] Product filtering
+- [ ] Product search
+- [ ] Product images
+- [ ] Product stock management
+- [ ] Product variants
+
+---
+
+# Shopping Cart
+- [ ] Cart entity
+- [ ] CartItem entity
+- [ ] Add product to cart
+- [ ] Update cart item quantity
+- [ ] Remove product from cart
+- [ ] Prevent duplicated items
+- [ ] Cart total calculation
+- [ ] Cart expiration
+
+---
+
+# Order Management
+
+- [ ] Order entity
+- [ ] OrderItem entity
+- [ ] Checkout flow
+- [ ] Order history
+- [ ] Order tracking
+- [ ] Order cancellation
+- [ ] Stock validation
+- [ ] Price snapshot
+
+---
+
+# Payment Module
+
+- [ ] Payment entity
+- [ ] Payment transaction entity
+- [ ] Payment abstraction layer
+- [ ] Fake payment gateway
 - [ ] Stripe integration
 - [ ] Stripe webhook
-- [ ] Order status lifecycle
-- [ ] Payment status lifecycle
-- [ ] Swagger/OpenAPI
-- [X] Flyway
-
-### Optional Features
-- [ ] MORE User roles and permissions management (Manager, Support, etc.)
-- [ ] Coupon system
-- [ ] Refresh Token via Cookie HttpOnly - XSS protection
-- [ ] Inventory management
 - [ ] Refund flow
-- [ ] Product variants
-- [ ] Wishlist
-- [ ] Reviews and ratings
-- [ ] Soft delete
-- [ ] Audit logs
-- [ ] Email notifications
-- [ ] Redis caching
-- [ ] Multiple payment providers
+- [ ] Payment retries
 
-### Tooling
-- [ ] Docker
-- [ ] Docker Compose
+---
+
+# Extra Features
+
+- [ ] Wishlist
+- [ ] Product reviews
+- [ ] Ratings
+- [ ] Coupon system
+- [ ] Email notifications
+
+### Inventory Module
+
+- [ ] Inventory entity
+- [ ] Stock reservation
+- [ ] Stock release
+- [ ] Inventory logs
+- [ ] Low stock alerts
+
+---
+
+# Testing
+
+### Unit Tests
+- [ ] Authentication tests
+- [ ] Product tests
+- [ ] Cart tests
+- [ ] Order tests
+- [ ] Payment tests
+
+### Integration Tests
+- [ ] Repository tests
+- [ ] Controller tests
+- [ ] Security tests
+
+### Advanced Testing
+- [ ] Testcontainers
+- [ ] Load testing
+
+---
+
+# Observability
+
 - [ ] Structured logging
 - [ ] Spring Boot Actuator
-- [ ] Prometheus
-- [ ] Grafana
-- [ ] Rate limiting
+- [ ] Health checks
+- [ ] Metrics monitoring
+
+---
+
+# DevOps
+
+- [x] Dockerfile
+- [x] Docker Compose
+- [ ] Production environment setup
+- [ ] Reverse proxy configuration
+- [ ] HTTPS setup
+
+---
+
+# Performance
+
+- [ ] Redis caching
+- [X] Query optimization
+- [X] Database indexing
+- [ ] Performance testing
+
+---
+
+# 📈 Future Improvements
+
+- Microservices architecture
+- Kafka/RabbitMQ
+- Multi-payment providers
+- Multi-currency support
+- Fraud detection
+- Multi-tenant support
+
+---
+
+## Author
+
+Developed by **Davy Muniz**

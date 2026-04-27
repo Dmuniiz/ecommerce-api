@@ -1,6 +1,7 @@
-package com.api.e_commerce.config.exception;
+package com.api.e_commerce.config.exception.custom;
 
 
+import com.api.e_commerce.config.exception.ApiErrorResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

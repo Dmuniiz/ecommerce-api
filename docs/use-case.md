@@ -617,7 +617,7 @@ The objective is to represent the core interactions between users, administrator
 **Main Flow**
 1. User sends address data
 2. System validates request
-3. System stores address linked to user
+3. System stores address linked to user_ID
 4. System returns created address
 
 **Postconditions**
@@ -714,17 +714,4 @@ These can be added later:
 - Add product to wishlist
 - Manage product variants
 - Receive low-stock alerts
-- Enforce rate limiting on sensitive endpoints
 - Send email notifications for order updates
-
----
-
-## Notes
-
-This use case document should evolve together with the implementation.
-
-Recommended next related documents:
-- `docs/domain-model.md`
-- `docs/architecture.md`
-- `docs/api-contract.md`
-- `docs/testing-strategy.md`
