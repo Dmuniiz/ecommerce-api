@@ -5,9 +5,10 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
-public interface AddressRepository extends JpaRepository<Address, UUID> {
+public interface IAddressRepository extends JpaRepository<Address, UUID> {
     List<Address> findAllByUserId(UUID userId);
 
     @Modifying(clearAutomatically = true) //dml or ddl

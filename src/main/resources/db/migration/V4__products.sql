@@ -10,7 +10,7 @@ CREATE TABLE products (
                           price NUMERIC(10,2) NOT NULL,
                           stock INTEGER NOT NULL,
 
-                          status VARCHAR(30) NOT NULL,
+                          status VARCHAR(30) NOT NULL DEFAULT 'DRAFT',
 
                           category_id UUID NOT NULL,
 
@@ -21,4 +21,5 @@ CREATE TABLE products (
 );
 
 CREATE INDEX idx_products_category ON products(category_id);
+CREATE INDEX idx_product_status ON products(status);
 CREATE INDEX idx_products_name ON products(name);

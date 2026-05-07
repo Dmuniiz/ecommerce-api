@@ -1,11 +1,11 @@
-package com.api.e_commerce.config.security;
+package com.api.e_commerce.config.security.model;
 
-import com.api.e_commerce.user.User;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.time.Instant;
+import java.util.UUID;
 
 @Entity
 @Table(name = "refresh_tokens", indexes = {
@@ -29,9 +29,8 @@ public class RefreshToken {
     @Column(nullable = false, updatable = false)
     private Instant createdAt;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    @Column(name = "user_id", nullable = false)
+    private UUID userId;
 
     @PrePersist
     protected void onCreate() {

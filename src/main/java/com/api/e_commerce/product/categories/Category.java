@@ -1,16 +1,14 @@
 package com.api.e_commerce.product.categories;
 
 
-import com.api.e_commerce.product.Product;
+import com.api.e_commerce.product.categories.dto.CreateCategoryRequest;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 import java.time.Instant;
 import java.util.Objects;
-import java.util.Set;
 import java.util.UUID;
 
 @Entity
@@ -18,7 +16,6 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
-@Setter
 public class Category {
 
     @Id
@@ -31,11 +28,13 @@ public class Category {
     @Column(length=1000)
     private String description;
 
-    @OneToMany(mappedBy = "category")
-    private Set<Product> products;
-
     @Column(name = "created_at", updatable = false)
     private Instant createdAt;
+
+    public Category(String name, String description) {
+        this.name = name;
+        this.description = description;
+    }
 
     @Override
     public boolean equals(Object o) {

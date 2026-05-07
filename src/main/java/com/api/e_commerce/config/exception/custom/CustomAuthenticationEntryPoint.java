@@ -14,10 +14,9 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 import java.time.LocalDateTime;
 
-
 @Component
-@RequiredArgsConstructor
 @Slf4j
+@RequiredArgsConstructor
 public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint { //401 -> authentication
 
     private final ObjectMapper objectMapper;
@@ -39,10 +38,10 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
                 .status(HttpServletResponse.SC_UNAUTHORIZED)
                 .error("Unauthorized")
                 .message("Authentication is required to access this resource")
-                .path(request.getRequestURI())
-                .traceId(MDC.get("traceId"))
                 .timestamp(LocalDateTime.now())
                 .build();
+
+        System.out.println(apiErrorResponse.traceId());
 
         objectMapper.writeValue(response.getOutputStream(), apiErrorResponse);
     }

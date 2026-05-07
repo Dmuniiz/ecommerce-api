@@ -20,25 +20,25 @@ public class AddressController {
     private final AddressService addressService;
 
     @GetMapping
-    public ResponseEntity<List<AddressesResponse>> getUserWithAddresses(@AuthenticationPrincipal User userPrincipal){
-        List<AddressesResponse> response = addressService.listAddressUser(userPrincipal.getId())
+    public ResponseEntity<List<AddressesResponse>> getAddressesWithUser(@AuthenticationPrincipal User user) {
+        List<AddressesResponse> response = addressService.listAddressesByUserId(user.getId())
                 .stream()
-                .map(addr -> AddressesResponse.fromEntity(addr, userPrincipal))
+                .map(addr -> AddressesResponse.fromEntity(addr, user))
                 .toList();
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping
-    public ResponseEntity<AddressesResponse> createAddress(@RequestBody @Valid CreateAddressRequest addressRequest, @AuthenticationPrincipal User userPrincipal){
-        var userId = userPrincipal.getId();
-        var addr = addressService.create(addressRequest, userId);
 
-        if(addressRequest.isDefault()){
-            addressService.setAddressAsDefault(userId, addr.getId());
+    @PostMapping
+    public ResponseEntity<AddressesResponse> register(@RequestBody @Valid CreateAddressRequest request, @AuthenticationPrincipal User user) {
+        var addr = addressService.create(request, user.getId());
+
+        if (request.isDefault()) {
+            addressService.setAddressAsDefault(user.getId(), addr.getId());
         }
 
-       var response = AddressesResponse.fromEntity(addr, userPrincipal);
-       return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        var response = AddressesResponse.fromEntity(addr, user);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
 

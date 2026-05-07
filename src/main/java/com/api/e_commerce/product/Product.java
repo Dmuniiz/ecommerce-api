@@ -1,11 +1,12 @@
 package com.api.e_commerce.product;
 
+import com.api.e_commerce.config.exception.ValidationException;
 import com.api.e_commerce.product.categories.Category;
+import com.api.e_commerce.product.dto.CreateProductRequest;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -16,7 +17,6 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
-@Setter
 public class Product {
 
     @Id
@@ -47,13 +47,23 @@ public class Product {
 
     @Column(name= "status",nullable = false)
     @Enumerated(EnumType.STRING)
-    private ProductStatus productStatus;
+    private ProductStatus productStatus = ProductStatus.DRAFT;
 
     @Column(nullable = false, updatable = false)
     private Instant createdAt = Instant.now();
 
     @Column(nullable = false)
     private Instant  updatedAt;
+
+    public Product(CreateProductRequest data, Category category, String sku) {
+        this.name = data.name();
+        this.sku = sku;
+        this.imageUrl = data.imageUrl();
+        this.description = data.description();
+        this.category = category;
+        this.price = data.price();
+        this.stock = data.stock();
+    }
 
     @PrePersist
     protected void onCreate() {
@@ -66,4 +76,15 @@ public class Product {
         updatedAt = Instant.now();
     }
 
+    public void decreaseStock(int quantity) {
+        if(quantity > this.stock){
+            throw new ValidationException("Insufficient stock");
+        }
+    }
+
+    public void increaseStock() {}
+
+    public void changeStatus(ProductStatus status) {
+        this.productStatus = status;
+    }
 }

@@ -1,4 +1,4 @@
-package com.api.e_commerce.config.security;
+package com.api.e_commerce.config.security.services;
 
 import com.api.e_commerce.config.exception.ValidationException;
 import com.api.e_commerce.user.User;
@@ -8,18 +8,17 @@ import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTCreationException;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
+
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.Base64;
 import java.util.Date;
 
-@Service
-@RequiredArgsConstructor
-public class TokenService {
+@Component
+public class TokenProvider {
 
     @Value("${jwt.secret}")
     private String secretKey;
@@ -41,7 +40,7 @@ public class TokenService {
         }
     }
 
-    public String extractSubject(String token) {
+    public String extractUsername(String token) {
         DecodedJWT decodedJWT;
 
         try {
@@ -57,7 +56,7 @@ public class TokenService {
             return decodedJWT.getSubject();
 
         } catch (JWTVerificationException ex) {
-            throw new RuntimeException("Invalid or expired token: "+ ex.getMessage());
+            throw new ValidationException("Invalid or expired token: "+ ex.getMessage());
         }
     }
 

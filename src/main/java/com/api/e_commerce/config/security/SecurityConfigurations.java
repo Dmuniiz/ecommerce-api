@@ -3,6 +3,7 @@ package com.api.e_commerce.config.security;
 
 import com.api.e_commerce.config.exception.custom.CustomAccessDeniedExceptionImpl;
 import com.api.e_commerce.config.exception.custom.CustomAuthenticationEntryPoint;
+import com.api.e_commerce.config.security.filters.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -11,6 +12,7 @@ import org.springframework.security.access.hierarchicalroles.RoleHierarchy;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -31,11 +33,12 @@ import java.util.Map;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
 @RequiredArgsConstructor
 public class SecurityConfigurations {
 
     private final CustomAuthenticationEntryPoint authenticationEntryPoint;
-    private final CustomAccessDeniedExceptionImpl accessDeniedHandler;
+    private final CustomAccessDeniedExceptionImpl accessDeniedException;
 
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
@@ -44,28 +47,30 @@ public class SecurityConfigurations {
     }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http, JwtFilter jwtFilter) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter) throws Exception {
 
        http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(AbstractHttpConfigurer::disable)
-
                 .sessionManagement(sn -> sn.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-
                 .authorizeHttpRequests(req -> req
                         .requestMatchers("/api/v1/auth/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/products/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/products/**").permitAll()
+                        .requestMatchers(HttpMethod.POST,"/api/v1/categories").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET,"/api/v1/categories").permitAll()
                         .requestMatchers(HttpMethod.GET,"/api/v1/users/me").hasRole("USER")
                         .requestMatchers(HttpMethod.PUT,"/api/v1/users/me").hasRole("USER")
                         .requestMatchers(HttpMethod.GET,"/api/v1/addresses").hasRole("USER")
                         .requestMatchers(HttpMethod.POST,"/api/v1/addresses").hasRole("USER")
                         .requestMatchers("/api/v1/users","/api/v1/users/{id}").hasRole("ADMIN")
+                        .requestMatchers("/api/v1/users","/api/v1/users/{id}").hasRole("ADMIN")
                         .anyRequest().authenticated())
-
-                .exceptionHandling(ex -> ex
-                        .authenticationEntryPoint(authenticationEntryPoint)
-                        .accessDeniedHandler(accessDeniedHandler))
-
-                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+               .exceptionHandling(ex -> ex
+                       .accessDeniedHandler(accessDeniedException)
+                       .authenticationEntryPoint(authenticationEntryPoint)
+               )
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
        return http.build();
     }

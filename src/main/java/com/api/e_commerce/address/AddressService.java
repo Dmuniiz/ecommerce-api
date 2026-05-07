@@ -1,7 +1,7 @@
 package com.api.e_commerce.address;
 
-import com.api.e_commerce.address.client.viacep.ViaCepResponse;
-import com.api.e_commerce.config.RestClient;
+import com.api.e_commerce.address.viacep.ViaCepResponse;
+import com.api.e_commerce.config.client.RestClient;
 import com.api.e_commerce.address.dto.CreateAddressRequest;
 import com.api.e_commerce.config.exception.ValidationException;
 import jakarta.transaction.Transactional;
@@ -9,16 +9,13 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
 public class AddressService {
 
-    private final AddressRepository addressRepository;
+    private final IAddressRepository addressRepository;
     private final RestClient restClient;
 
     @Transactional
@@ -32,24 +29,25 @@ public class AddressService {
         addressRepository.save(address);
     }
 
-    public List<Address> listAddressUser(UUID userId) {
+    @Transactional(readOnly = true)
+    public List<Address> listAddressesByUserId(UUID userId) {
         return addressRepository.findAllByUserId(userId);
     }
 
-    public Address create(CreateAddressRequest addressRequest, UUID userId) {
-        var client = clientViaCepApi(addressRequest.zipCode());
+    public Address create(CreateAddressRequest data, UUID userId) {
+        var client = clientViaCepApi(data.zipCode());
 
         Map<String, String> errors = new HashMap<>();
 
-        validateAddressField(errors, "street", addressRequest.street(), client.street());
-        validateAddressField(errors, "city", addressRequest.city(), client.city());
-        validateAddressField(errors, "state", addressRequest.state(), client.state());
+        validateAddressField(errors, "street", data.street(), client.street());
+        validateAddressField(errors, "city", data.city(), client.city());
+        validateAddressField(errors, "state", data.state(), client.state());
 
         if (!errors.isEmpty()) {
             throw new ValidationException("Divergent data for POSTAL CODE:");
         }
 
-        return addressRepository.save(new Address(addressRequest, userId));
+        return addressRepository.save(new Address(data, userId));
     }
 
     private ViaCepResponse clientViaCepApi(String zipCode) {

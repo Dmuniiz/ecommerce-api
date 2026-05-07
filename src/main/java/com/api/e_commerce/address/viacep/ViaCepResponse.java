@@ -1,4 +1,4 @@
-package com.api.e_commerce.address.client.viacep;
+package com.api.e_commerce.address.viacep;
 
 public record ViaCepResponse(
         String zipCode,

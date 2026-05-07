@@ -167,6 +167,8 @@ Represents the current shopping cart of a user.
 
 - `id`
 - `user`
+- `items`
+- `totalAmount`
 - `createdAt`
 - `updatedAt`
 
@@ -215,10 +217,9 @@ Represents a finalized purchase created from checkout.
 
 - `id`
 - `user`
-- `status`
+- `statusEnum`
 - `totalAmount`
 - `createdAt`
-- `updatedAt`
 
 ### Relationships
 

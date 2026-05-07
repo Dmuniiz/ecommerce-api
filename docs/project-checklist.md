@@ -41,7 +41,7 @@
 - [x] Request validation
 - [x] Global exception handling
 - [x] Rate limiting
-- [X] Refresh token rotation
+- [ ] Refresh token rotation + Redis
 
 ### Pending Security Features
 - [ ] Logout endpoint
@@ -81,8 +81,8 @@
 - [x] Product entity + table
 
 ### Pending
-- [ ] Category CRUD
-- [ ] Product CRUD
+- [X] Category CRUD
+- [X] Product CRUD
 - [ ] Product pagination
 - [ ] Product sorting
 - [ ] Product filtering
@@ -94,21 +94,21 @@
 ---
 
 # Shopping Cart
-- [ ] Cart entity
-- [ ] CartItem entity
-- [ ] Add product to cart
+- [X] Cart entity
+- [X] CartItem entity
+- [X] Add product to cart
 - [ ] Update cart item quantity
-- [ ] Remove product from cart
-- [ ] Prevent duplicated items
-- [ ] Cart total calculation
-- [ ] Cart expiration
+- [X] Remove product from cart
+- [X] Prevent duplicated items
+- [X] Cart total calculation
+- [X] Cart expiration
 
 ---
 
 # Order Management
 
-- [ ] Order entity
-- [ ] OrderItem entity
+- [x] Order entity
+- [x] OrderItem entity
 - [ ] Checkout flow
 - [ ] Order history
 - [ ] Order tracking
@@ -191,6 +191,7 @@
 # Performance
 
 - [ ] Redis caching
+- Refresh token rotation + Redis
 - [X] Query optimization
 - [X] Database indexing
 - [ ] Performance testing

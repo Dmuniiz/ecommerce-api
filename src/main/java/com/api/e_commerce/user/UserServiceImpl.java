@@ -1,8 +1,7 @@
 package com.api.e_commerce.user;
 
 import com.api.e_commerce.config.exception.ValidationException;
-import com.api.e_commerce.role.Role;
-import com.api.e_commerce.role.RoleRepository;
+import com.api.e_commerce.role.RoleService;
 import com.api.e_commerce.role.RoleType;
 import com.api.e_commerce.user.dto.UserUpdateRequest;
 import jakarta.transaction.Transactional;
@@ -11,15 +10,14 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
 
-    private final UserRepository userRepository;
-    private final RoleRepository roleRepository;
+    private final IUserRepository userRepository;
+    private final RoleService roleService;
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
@@ -53,20 +51,22 @@ public class UserServiceImpl implements UserService {
             throw new IllegalArgumentException("Email already in use: " + email);
         }
 
-        List<Role> defaultRoleUser = roleRepository.findByRoleName(RoleType.USER)
-                .map(List::of)
-                .orElseGet(ArrayList::new);
+        var role = roleService.addRole(RoleType.USER);
 
-        var constructorUser = new User(
+        var authUser = new User(
                 name,
                 email,
                 password,
-                defaultRoleUser
+                role
         );
-
-        return userRepository.save(constructorUser);
+        return userRepository.save(authUser);
     }
 
+    @Override
+    public User findUserById(UUID id) {
+        return userRepository.findById(id)
+                .orElseThrow(() -> new ValidationException("User not found"));
+    }
 
 
 }

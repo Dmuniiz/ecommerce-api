@@ -37,13 +37,14 @@
 
 ### **Products:**
 
-| Método   | Endpoint         | Descrição        | Auth   | Roles   | Status Code                |
-| :------- | :--------------- | :--------------- | :----- | :------ | :------------------------- |
-| `GET`    | `/products`      | Lista produtos   | Public | -       | `200`                      |
-| `GET`    | `/products/{id}` | Busca produto    | Public | -       | `200`, `404`               |
-| `POST`   | `/products`      | Cria produto     | Bearer | `ADMIN` | `201`, `400`, `403`        |
-| `PUT`    | `/products/{id}` | Atualiza produto | Bearer | `ADMIN` | `200`, `400`, `404`, `403` |
-| `DELETE` | `/products/{id}` | Remove produto   | Bearer | `ADMIN` | `204`, `404`, `403`        |
+| Método   | Endpoint                | Descrição               | Auth   | Roles   | Status Code                |
+|:---------|:------------------------|:------------------------| :----- | :------ | :------------------------- |
+| `GET`    | `/products`             | Lista produtos          | Public | -       | `200`                      |
+| `GET`    | `/products/{id}`        | Busca produto           | Public | -       | `200`, `404`               |
+| `POST`   | `/products`             | Cria produto            | Bearer | `ADMIN` | `201`, `400`, `403`        |
+| `PUT`    | `/products/{id}`        | Atualiza produto        | Bearer | `ADMIN` | `200`, `400`, `404`, `403` |
+| `DELETE` | `/products/{id}`        | Remove produto          | Bearer | `ADMIN` | `204`, `404`, `403`        |
+| `PATCH`  | `/products/{id}/status` | Atualiza status produto | Bearer | `ADMIN` | `200`, `400`, `404`, `403` |
 
 
 
