@@ -1,10 +1,9 @@
 package com.api.e_commerce.order;
 
-import com.api.e_commerce.address.AddressService;
-import com.api.e_commerce.address.AddressType;
 import com.api.e_commerce.order.dto.CheckoutOrderRequest;
 import com.api.e_commerce.order.dto.OrderResponse;
 import com.api.e_commerce.order.mapper.OrderMapper;
+import com.api.e_commerce.payment.service.PaymentService;
 import com.api.e_commerce.user.User;
 import com.api.e_commerce.user.UserService;
 import jakarta.validation.Valid;
@@ -15,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -24,12 +24,11 @@ public class OrderController {
 
     private final OrderService orderService;
     private final OrderMapper orderMapper;
+    private final PaymentService paymentService;
 
 
     @PostMapping("{cartId}/checkout")
-    public ResponseEntity<OrderResponse> checkoutOrder(@PathVariable UUID cartId, @RequestBody @Valid CheckoutOrderRequest request, @AuthenticationPrincipal User user, UriComponentsBuilder builder) {
-        //verificar se o carrtId possui o mesmo user do carrinho
-
+    public ResponseEntity<OrderResponse> registerOrder(@PathVariable UUID cartId, @RequestBody @Valid CheckoutOrderRequest request, @AuthenticationPrincipal User user, UriComponentsBuilder builder) {
         Order createdOrder = orderService.processCheckout(
                 user.getId(),
                 cartId,
@@ -38,9 +37,10 @@ public class OrderController {
         );
 
         OrderResponse response = orderMapper.toOrderResponse(createdOrder);
-        URI uri = builder.path("/orders/{id}").buildAndExpand(createdOrder.getId()).toUri(); //GET > USER
 
-        return ResponseEntity.created(uri).body(response);
+        URI locationUri  = builder.path("/orders/{id}").buildAndExpand(createdOrder.getId()).toUri(); //GET > USER
+
+        return ResponseEntity.created(locationUri).body(response);
     }
 
 }

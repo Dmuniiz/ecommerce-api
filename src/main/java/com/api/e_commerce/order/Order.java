@@ -29,6 +29,7 @@ public class Order {
     private UUID userId;
 
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private OrderStatus status = OrderStatus.PENDING;
 
     @Embedded
@@ -57,13 +58,23 @@ public class Order {
     })
     private OrderAddress billingAddress;
 
-    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
+    @OneToMany(
+            mappedBy = "orderId",
+            cascade = {
+                    CascadeType.PERSIST,
+                    CascadeType.MERGE
+            },
+            orphanRemoval = true
+    )
     private List<OrderItem> items = new ArrayList<>();
 
     @Column(name = "total_amount", precision = 10, scale = 2, nullable = false)
     private BigDecimal totalAmount;
 
-    @Column(name = "created_at", updatable = false)
+    @Column(nullable = false, length = 10)
+    private String currency = "BRL";
+
+    @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt = Instant.now();
 
     public void cancel() {
@@ -74,6 +85,13 @@ public class Order {
     }
 
     public void setItems(List<OrderItem> orderItems) {
-        this.items = orderItems;
+        this.items.addAll(orderItems);
+    }
+
+    public void markAsPaid() {
+        if(this.status != OrderStatus.PENDING) {
+            throw new  IllegalStateException("Cannot mark this order as paid");
+        }
+        this.status = OrderStatus.PAID;
     }
 }

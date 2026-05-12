@@ -76,12 +76,6 @@ public class Product {
         updatedAt = Instant.now();
     }
 
-    public void decreaseStock(int quantity) {
-        if(quantity > this.stock){
-            throw new ValidationException("Insufficient stock");
-        }
-    }
-
     public void increaseStock() {}
 
     public void changeStatus(ProductStatus status) {

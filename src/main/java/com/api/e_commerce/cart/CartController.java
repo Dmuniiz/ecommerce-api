@@ -5,8 +5,6 @@ import com.api.e_commerce.cart.dto.CartItemResponse;
 import com.api.e_commerce.cart.dto.CartResponse;
 import com.api.e_commerce.user.User;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -24,11 +22,16 @@ public class CartController {
     private final CartService cartService;
 
     @GetMapping
-    public ResponseEntity<List<CartItemResponse>> getCurrentUserCart(@AuthenticationPrincipal User user){
-        var response = cartService.listCartItemByUser(user.getId())
+    public ResponseEntity<CartResponse> getCurrentUserCart(@AuthenticationPrincipal User user){
+
+        var cart = cartService.listCartByUser(user.getId());
+
+        var cartItems = cart.getCartItems()
                 .stream()
                 .map(CartItemResponse::fromEntity)
                 .toList();
+
+        var response = CartResponse.fromEntity(cart, cartItems);
 
         return ResponseEntity.ok(response);
     }
@@ -37,7 +40,7 @@ public class CartController {
     public ResponseEntity<CartResponse> updateItemQuantityInCart()*/
 
     @PostMapping("/items")
-    public ResponseEntity<CartResponse> addToCart(@RequestBody @Valid AddToCartRequest request, @AuthenticationPrincipal User user) {
+    public ResponseEntity<List<CartItemResponse>> addToCart(@RequestBody @Valid AddToCartRequest request, @AuthenticationPrincipal User user) {
         var cart = cartService.addItemToCart(request.productId(), request.quantity(), user.getId());
 
         List<CartItemResponse> cartItemResponseList = cart.getCartItems()
@@ -45,7 +48,7 @@ public class CartController {
                 .map(CartItemResponse::fromEntity)
                 .toList();
 
-        return ResponseEntity.ok(CartResponse.fromEntity(cart, cartItemResponseList));
+        return ResponseEntity.ok(cartItemResponseList);
     }
 
     @DeleteMapping("/{itemId}")

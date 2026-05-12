@@ -6,7 +6,7 @@ import com.api.e_commerce.product.IProductRepository;
 import com.api.e_commerce.product.Product;
 import com.api.e_commerce.product.ProductService;
 import com.api.e_commerce.user.UserService;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -26,10 +26,10 @@ public class CartService {
     private final ProductService productService;
     private final UserService userService;
 
-    public List<CartItem> listCartItemByUser(UUID userId) {
+
+    public Cart listCartByUser(UUID userId) {
         return cartRepository.findByUserWithItems(userId)
-                .orElseThrow(() -> new ValidationException("Cart not found"))
-                .getCartItems(); //List<CartItem>
+                .orElseThrow(() -> new ValidationException("Cart not found"));//List<CartItem>
     }
 
     @Transactional

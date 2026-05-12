@@ -2,6 +2,7 @@ package com.api.e_commerce.address;
 
 import com.api.e_commerce.address.dto.CreateAddressRequest;
 import com.api.e_commerce.address.dto.AddressesResponse;
+import com.api.e_commerce.address.dto.UpdateAddressRequest;
 import com.api.e_commerce.user.User;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -11,6 +12,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/addresses")
@@ -28,7 +30,6 @@ public class AddressController {
         return ResponseEntity.ok(response);
     }
 
-
     @PostMapping
     public ResponseEntity<AddressesResponse> register(@RequestBody @Valid CreateAddressRequest request, @AuthenticationPrincipal User user) {
         var addr = addressService.create(request, user.getId());
@@ -39,6 +40,14 @@ public class AddressController {
 
         var response = AddressesResponse.fromEntity(addr, user);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+
+    @PatchMapping("/{id}")
+    public ResponseEntity<Void> updateUserAddress(@PathVariable("id") UUID addressId, @RequestBody @Valid UpdateAddressRequest request, @AuthenticationPrincipal User user){
+        addressService.updateAddress(user.getId(), addressId, request);
+
+        return ResponseEntity.noContent().build();
     }
 
 

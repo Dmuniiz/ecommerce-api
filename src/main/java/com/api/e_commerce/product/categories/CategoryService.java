@@ -2,7 +2,7 @@ package com.api.e_commerce.product.categories;
 
 import com.api.e_commerce.config.exception.ValidationException;
 import com.api.e_commerce.product.categories.dto.CreateCategoryRequest;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -22,11 +22,13 @@ public class CategoryService {
         return categoryRepository.save(new Category(name, description));
     }
 
+
     public Category findByName(String name) {
         return categoryRepository.findByName(name)
                 .orElseThrow(() -> new ValidationException("category does not exist"));
     }
 
+    @Transactional(readOnly = true)
     public List<Category> findAllCategories(){
         return categoryRepository.findAll();
     }

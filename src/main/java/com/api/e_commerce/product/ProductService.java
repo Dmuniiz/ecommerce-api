@@ -3,14 +3,13 @@ package com.api.e_commerce.product;
 import com.api.e_commerce.config.exception.ValidationException;
 import com.api.e_commerce.product.categories.ICategoryRepository;
 import com.api.e_commerce.product.dto.CreateProductRequest;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.math.BigDecimal;
 import java.util.UUID;
 
 
@@ -59,6 +58,7 @@ public class ProductService {
         return productRepository.save(product);
     }
 
+    @Transactional(readOnly = true)
     public Product findByStringParamIdConvertToUUID(String id){
         try {
             UUID productId = UUID.fromString(id);
@@ -84,4 +84,7 @@ public class ProductService {
        productRepository.delete(product);
     }
 
+    public void decreaseStock(UUID productId, int quantity) {
+        productRepository.decreaseStock(productId, quantity);
+    }
 }

@@ -1,6 +1,5 @@
 package com.api.e_commerce.order.dto;
 
-import com.api.e_commerce.order.OrderAddress;
 import com.api.e_commerce.order.OrderStatus;
 
 import java.math.BigDecimal;
@@ -17,4 +16,6 @@ public record OrderResponse(
         Boolean sameAsShipping,
         OrderAddressResponse billingAddress,
         List<OrderItemResponse> items
-) { }
+) {
+
+}

@@ -1,14 +1,18 @@
 package com.api.e_commerce.address;
 
+import com.api.e_commerce.address.dto.UpdateAddressRequest;
 import com.api.e_commerce.address.viacep.ViaCepResponse;
 import com.api.e_commerce.config.client.RestClient;
 import com.api.e_commerce.address.dto.CreateAddressRequest;
 import com.api.e_commerce.config.exception.ValidationException;
-import jakarta.transaction.Transactional;
+import jakarta.validation.Valid;
+import lombok.Data;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
 
+import java.nio.file.AccessDeniedException;
 import java.util.*;
 
 @Service
@@ -34,13 +38,18 @@ public class AddressService {
         return addressRepository.findAllByUserId(userId);
     }
 
+    @Transactional
     public Address create(CreateAddressRequest data, UUID userId) {
+        if(addressRepository.existsByUserIdAndZipCodeAndNumber(userId, data.zipCode(), data.number())) {
+            throw new ValidationException("Address already exists! Check your address type!");
+        }
+
         var client = clientViaCepApi(data.zipCode());
 
         Map<String, String> errors = new HashMap<>();
-
         validateAddressField(errors, "street", data.street(), client.street());
         validateAddressField(errors, "city", data.city(), client.city());
+        validateAddressField(errors, "neighborhood", data.neighborhood(), client.neighborhood());
         validateAddressField(errors, "state", data.state(), client.state());
 
         if (!errors.isEmpty()) {
@@ -69,4 +78,14 @@ public class AddressService {
         }
     }
 
+    @Transactional
+    public void updateAddress(UUID userId, UUID addressId, UpdateAddressRequest request) {
+        Address address = addressRepository.findByIdAndUserId(addressId, userId)
+                .orElseThrow(() -> new ValidationException("Address not found or access denied!"));
+
+        address.updateFields(
+                request.addressType(),
+                request.complement(),
+                request.number());
+    }
 }

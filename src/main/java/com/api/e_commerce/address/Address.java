@@ -3,6 +3,8 @@ package com.api.e_commerce.address;
 import com.api.e_commerce.address.dto.CreateAddressRequest;
 import com.api.e_commerce.user.User;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -84,4 +86,9 @@ public class Address {
         updatedAt = Instant.now();
     }
 
+    public void updateFields(Set<AddressType> addressTypes, String complement, String number) {
+        this.addressType.addAll(addressTypes);
+        this.complement = complement;
+        this.number = number;
+    }
 }

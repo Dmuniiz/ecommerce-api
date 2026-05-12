@@ -21,9 +21,37 @@ import java.util.List;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    private ResponseEntity<ApiErrorResponse> buildErrorResponse(
+            HttpStatus status,
+            String message,
+            HttpServletRequest request,
+            List<FieldError> errors) {
+
+        ApiErrorResponse response = ApiErrorResponse.builder()
+                .status(status.value())
+                .error(status.getReasonPhrase())
+                .message(message)
+                .path(request.getRequestURI())
+                .traceId(MDC.get("traceId"))
+                .timestamp(LocalDateTime.now())
+                .errors(errors)
+                .build();
+        return ResponseEntity.status(status).body(response);
+    }
+
+
+    private ResponseEntity<ApiErrorResponse> buildErrorResponse(HttpStatus status, String message, HttpServletRequest request) {
+        return buildErrorResponse(status, message, request, null);
+    }
+
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<ApiErrorResponse> handleBadCredentials(BadCredentialsException ex, HttpServletRequest request) {
         return buildErrorResponse(HttpStatus.UNAUTHORIZED, ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(PaymentGatewayException.class)
+    public ResponseEntity<ApiErrorResponse> handlePaymentGatewayException(Exception ex, HttpServletRequest request) {
+        return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage(), request);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -64,32 +92,10 @@ public class GlobalExceptionHandler {
         return buildErrorResponse(HttpStatus.CONFLICT, " Data integrity violation", request);
     }
 
-    private ResponseEntity<ApiErrorResponse> buildErrorResponse(
-            HttpStatus status,
-            String message,
-            HttpServletRequest request,
-            List<FieldError> errors) {
-
-        ApiErrorResponse response = ApiErrorResponse.builder()
-                .status(status.value())
-                .error(status.getReasonPhrase())
-                .message(message)
-                .path(request.getRequestURI())
-                .traceId(MDC.get("traceId"))
-                .timestamp(LocalDateTime.now())
-                .errors(errors)
-                .build();
-        return ResponseEntity.status(status).body(response);
-    }
-
-
-    private ResponseEntity<ApiErrorResponse> buildErrorResponse(HttpStatus status, String message, HttpServletRequest request) {
-        return buildErrorResponse(status, message, request, null);
-    }
-
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiErrorResponse> handleInternalServerError(Exception ex, HttpServletRequest request) {
         log.error("Unexpected server error", ex);
+
         return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected error occurred", request);
     }
 }
