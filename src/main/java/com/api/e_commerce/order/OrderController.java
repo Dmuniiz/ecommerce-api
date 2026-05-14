@@ -5,7 +5,6 @@ import com.api.e_commerce.order.dto.OrderResponse;
 import com.api.e_commerce.order.mapper.OrderMapper;
 import com.api.e_commerce.payment.service.PaymentService;
 import com.api.e_commerce.user.User;
-import com.api.e_commerce.user.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -14,7 +13,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
-import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -24,7 +22,6 @@ public class OrderController {
 
     private final OrderService orderService;
     private final OrderMapper orderMapper;
-    private final PaymentService paymentService;
 
 
     @PostMapping("{cartId}/checkout")

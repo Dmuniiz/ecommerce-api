@@ -3,8 +3,9 @@ package com.api.e_commerce.payment.gateways.stripe;
 import com.api.e_commerce.config.exception.PaymentGatewayException;
 import com.api.e_commerce.order.Order;
 import com.api.e_commerce.order.orderItem.OrderItem;
+import com.api.e_commerce.payment.domain.enums.PaymentProvider;
 import com.api.e_commerce.payment.dto.CreateCheckoutSessionResponse;
-import com.api.e_commerce.payment.gateways.PaymentGateway;
+import com.api.e_commerce.payment.gateways.PaymentStrategy;
 import com.api.e_commerce.payment.infrastructure.StripeProperties;
 import com.stripe.exception.StripeException;
 import com.stripe.model.checkout.Session;
@@ -14,12 +15,12 @@ import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 
-@Component
-public class StripePaymentGatewayImpl implements PaymentGateway {
+@Component("STRIPE")
+public class StripePaymentStrategyImpl implements PaymentStrategy {
 
     private final StripeProperties properties;
 
-    public StripePaymentGatewayImpl(StripeProperties properties) {
+    public StripePaymentStrategyImpl(StripeProperties properties) {
         this.properties = properties;
     }
 
@@ -31,8 +32,6 @@ public class StripePaymentGatewayImpl implements PaymentGateway {
                     .setMode(SessionCreateParams.Mode.PAYMENT)
                     .setSuccessUrl("http://localhost:8080/payment/success?orderId="+order.getId())
                     .setCancelUrl("http://localhost:8080/payment/cancel");
-
-            System.out.println(order.getItems().size());
 
             for(OrderItem item : order.getItems()) {
                 params.addLineItem(
@@ -46,7 +45,7 @@ public class StripePaymentGatewayImpl implements PaymentGateway {
                                                 .PriceData
                                                 .builder()
                                                 .setCurrency(order.getCurrency().toLowerCase())
-                                                .setUnitAmount(convertToStripeAmount(item.getPriceAtPurchase()))
+                                                .setUnitAmount(ConvertToAmount(item.getPriceAtPurchase()))
                                                 .setProductData(
                                                         SessionCreateParams
                                                                 .LineItem
@@ -80,7 +79,13 @@ public class StripePaymentGatewayImpl implements PaymentGateway {
         }
     }
 
-    private Long convertToStripeAmount(BigDecimal amount) {
+    @Override
+    public String getProvider() {
+        return PaymentProvider.STRIPE.name();
+    }
+
+    @Override
+    public Long ConvertToAmount(BigDecimal amount) {
         return amount.multiply(BigDecimal.valueOf(100)).longValue();
     }
 

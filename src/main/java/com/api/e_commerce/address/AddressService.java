@@ -2,17 +2,14 @@ package com.api.e_commerce.address;
 
 import com.api.e_commerce.address.dto.UpdateAddressRequest;
 import com.api.e_commerce.address.viacep.ViaCepResponse;
-import com.api.e_commerce.config.client.RestClient;
+import com.api.e_commerce.config.client.RestClientConfig;
 import com.api.e_commerce.address.dto.CreateAddressRequest;
 import com.api.e_commerce.config.exception.ValidationException;
-import jakarta.validation.Valid;
-import lombok.Data;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
 
-import java.nio.file.AccessDeniedException;
 import java.util.*;
 
 @Service
@@ -20,7 +17,7 @@ import java.util.*;
 public class AddressService {
 
     private final IAddressRepository addressRepository;
-    private final RestClient restClient;
+    private final RestClientConfig restViaCepClient;
 
     @Transactional
     public void setAddressAsDefault(UUID userId, UUID addressId) {
@@ -62,7 +59,7 @@ public class AddressService {
     private ViaCepResponse clientViaCepApi(String zipCode) {
         String formatCode = zipCode.replaceAll("\\D", "");
 
-        return restClient.viaCepClient()
+        return restViaCepClient.viaCepClient()
                 .get()
                 .uri("/{zipCode}/json/", formatCode)
                 .retrieve()

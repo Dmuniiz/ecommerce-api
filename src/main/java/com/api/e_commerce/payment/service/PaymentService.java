@@ -11,13 +11,12 @@ import com.api.e_commerce.payment.domain.enums.PaymentStatus;
 import com.api.e_commerce.payment.domain.enums.PaymentTransactionStatus;
 import com.api.e_commerce.payment.domain.enums.PaymentTransactionType;
 import com.api.e_commerce.payment.dto.CreateCheckoutSessionResponse;
-import com.api.e_commerce.payment.gateways.PaymentGateway;
-import com.api.e_commerce.payment.gateways.stripe.StripePaymentGatewayImpl;
+import com.api.e_commerce.payment.gateways.PaymentStrategy;
+import com.api.e_commerce.payment.gateways.stripe.StripePaymentStrategyImpl;
 import com.api.e_commerce.payment.repository.PaymentRepository;
 import com.api.e_commerce.payment.repository.PaymentTransactionRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
-import org.aspectj.weaver.ast.Or;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,32 +27,31 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class PaymentService {
 
+    private final PaymentFactory paymentFactory;
     private final PaymentRepository paymentRepository;
     private final OrderRepository orderRepository;
-    private final StripePaymentGatewayImpl paymentGateway;
     private final PaymentTransactionRepository transactionRepository;
 
     @Transactional
-    public CreateCheckoutSessionResponse createCheckoutSession(UUID orderId, UUID userId) {
+    public CreateCheckoutSessionResponse createCheckoutSession(UUID orderId, PaymentProvider provider) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new ValidationException("Order not found"));
 
-        Payment payment = getOrCreatePayment(order);
+        PaymentStrategy strategy = paymentFactory.getPaymentStrategy(provider.name());
+
+        Payment payment = getOrCreatePayment(order, strategy.getProvider());
 
         try{
-            //CreateCheckoutSessionResponse
-            System.out.println(order.getItems().size());
-            var response = paymentGateway.createCheckoutSession(order);
+            var response = strategy.createCheckoutSession(order);
 
             payment.attachCheckoutSessionId(response.sessionId());
-
             payment.setPaymentStatus(PaymentStatus.PENDING);
-
             paymentRepository.save(payment);
 
             registerTransactionDetails(payment, response.sessionId(), PaymentTransactionType.CHECKOUT_SESSION_CREATED, PaymentTransactionStatus.SUCCESS, null);
 
             return response;
+
         }catch (RuntimeException e){
             registerTransactionDetails(payment, null, PaymentTransactionType.PAYMENT_FAILED, PaymentTransactionStatus.FAILURE, e.getMessage());
 
@@ -64,7 +62,7 @@ public class PaymentService {
         }
     }
 
-    private Payment getOrCreatePayment(Order order) {
+    private Payment getOrCreatePayment(Order order,  String provider) {
         return paymentRepository.findByOrderId(order.getId())
                 .orElseGet(() -> {
                     Payment newPayment = new Payment();
@@ -72,7 +70,7 @@ public class PaymentService {
                     newPayment.setAmount(order.getTotalAmount());
                     newPayment.setCurrency(order.getCurrency());
                     newPayment.setPaymentStatus(PaymentStatus.PENDING);
-                    newPayment.setProvider(PaymentProvider.STRIPE);
+                    newPayment.setProvider(PaymentProvider.valueOf(provider));
                     return paymentRepository.save(newPayment);
                 });
     }
