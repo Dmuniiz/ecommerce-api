@@ -1,18 +1,17 @@
 package com.api.e_commerce.payment;
 
 import com.api.e_commerce.order.OrderService;
-import com.api.e_commerce.payment.domain.Payment;
 import com.api.e_commerce.payment.domain.enums.PaymentProvider;
-import com.api.e_commerce.payment.dto.CreateCheckoutSessionResponse;
-import com.api.e_commerce.payment.gateways.PaymentStrategy;
+import com.api.e_commerce.payment.dto.CreateCheckoutRequest;
+import com.api.e_commerce.payment.dto.PaymentGatewayResponse;
 import com.api.e_commerce.payment.infrastructure.StripeProperties;
-import com.api.e_commerce.payment.service.PaymentFactory;
 import com.api.e_commerce.payment.service.PaymentService;
 import com.api.e_commerce.user.User;
 import com.stripe.exception.SignatureVerificationException;
 import com.stripe.model.Event;
 import com.stripe.model.checkout.Session;
 import com.stripe.net.Webhook;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -33,10 +32,10 @@ public class PaymentController {
     private final OrderService orderService;
     private final StripeProperties  stripeProperties;
 
-    @PostMapping("/checkouts/create/{orderId}")
-    public ResponseEntity<CreateCheckoutSessionResponse> createCheckoutSession(@PathVariable("orderId") UUID orderId, @RequestParam("provider") PaymentProvider provider, @AuthenticationPrincipal User user) {
+    @PostMapping("/{orderId}/checkout-session")
+        public ResponseEntity<PaymentGatewayResponse> createCheckoutSession(@PathVariable("orderId") UUID orderId, @RequestBody @Valid CreateCheckoutRequest request, @AuthenticationPrincipal User user) {
 
-        var response = paymentService.createCheckoutSession(orderId, provider);
+        var response = paymentService.createCheckoutSession(orderId, request.provider());
 
         return ResponseEntity.ok(response);
     }

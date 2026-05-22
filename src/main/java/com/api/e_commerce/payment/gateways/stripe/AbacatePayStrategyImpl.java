@@ -4,7 +4,7 @@ import com.api.e_commerce.order.Order;
 import com.api.e_commerce.payment.domain.enums.PaymentProvider;
 import com.api.e_commerce.payment.dto.AbacatePayCheckoutRequest;
 import com.api.e_commerce.payment.dto.AbacatePayProductItem;
-import com.api.e_commerce.payment.dto.CreateCheckoutSessionResponse;
+import com.api.e_commerce.payment.dto.PaymentGatewayResponse;
 import com.api.e_commerce.payment.gateways.PaymentStrategy;
 import com.api.e_commerce.payment.infrastructure.AbacatePayProperties;
 import lombok.RequiredArgsConstructor;
@@ -23,7 +23,7 @@ public class AbacatePayStrategyImpl implements PaymentStrategy {
     private final AbacatePayProperties abacatePayProperties;
 
     @Override
-    public CreateCheckoutSessionResponse createCheckoutSession(Order order) {
+    public PaymentGatewayResponse createCheckoutSession(Order order) {
 
         List<AbacatePayProductItem> apiItems = order.getItems().stream()
                 .map(item -> new AbacatePayProductItem(
@@ -34,20 +34,23 @@ public class AbacatePayStrategyImpl implements PaymentStrategy {
 
         var checkoutRequestBody = new AbacatePayCheckoutRequest(
                 apiItems,
-                List.of("PIX"), // Métodos de pagamento aceitos
+                List.of("PIX"),
+                order.getId().toString(),
                 "http://localhost:8080/payment/success?orderId="+order.getId(),
                 "http://localhost:8080/payment/cancel"
         );
 
-        return abacatePayClient
+
+        PaymentGatewayResponse authorization = abacatePayClient
                 .post()
                 .uri("/checkouts/create")
                 .header("Authorization", "Bearer " + abacatePayProperties.getSECRET_KEY())
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(checkoutRequestBody)
                 .retrieve()
-                .body(CreateCheckoutSessionResponse.class);
+                .body(PaymentGatewayResponse.class);
 
+        return authorization;
     }
 
     @Override

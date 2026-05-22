@@ -5,6 +5,7 @@ import com.api.e_commerce.address.AddressService;
 import com.api.e_commerce.address.AddressType;
 import com.api.e_commerce.cart.Cart;
 import com.api.e_commerce.cart.CartService;
+import com.api.e_commerce.cart.cartItem.CartItem;
 import com.api.e_commerce.config.exception.ValidationException;
 import com.api.e_commerce.order.orderItem.OrderItem;
 import com.api.e_commerce.payment.domain.enums.PaymentTransactionStatus;
@@ -35,46 +36,62 @@ public class OrderService {
     }
 
     @Transactional
-    public Order processCheckout(UUID userId, UUID cartId, UUID shipId, UUID billId) {
+    public Order createOrder(UUID userId, UUID cartId, UUID shipId, UUID billId) {
+        Cart cart = cartService.findByIdAndUserId(cartId, userId);
 
-        Cart cartEntity = cartService.findByIdAndUserId(cartId, userId);
+        List<Address> addresses = addressService.listAddressesByUserId(userId);
 
-        var userAddresses = addressService.listAddressesByUserId(userId);
+        Address shipping = validateAddress(addresses, shipId, AddressType.SHIPPING);
+        Address billing = validateAddress(addresses, billId, AddressType.BILLING);
 
-        Address shipAddr = findValidatedAddress(userAddresses, shipId, AddressType.SHIPPING);
-        Address billAddr = findValidatedAddress(userAddresses, billId, AddressType.BILLING);
-
-        return createOrderFromCart(cartEntity, shipAddr, billAddr, userId);
-    }
-
-    @Transactional
-    public Order createOrderFromCart(Cart cart, Address shipAddr, Address billAddr, UUID userId) {
-        Order order = new Order();
-        order.setUserId(userId);
-        order.setTotalAmount(cart.getTotalAmount());
-        order.setShippingAddress(new OrderAddress(shipAddr));
-        order.setBillingAddress(new OrderAddress(billAddr));
-
-        orderRepository.save(order);
-
-        List<OrderItem> orderItems = cart.getCartItems().stream().map(cartItem -> {
-            OrderItem orderItem = new OrderItem();
-            orderItem.setItem(cartItem);
-            orderItem.setOrder(order.getId());
-            return orderItem;
-        }).toList();
-        order.setItems(orderItems);
+        Order order = buildOrder(userId, cart, shipping, billing);
 
         cartService.clearCartFromCreateOrder(cart);
 
         return orderRepository.save(order);
     }
 
-    public Address findValidatedAddress(List<Address> userAddresses, UUID addressId, AddressType addressType) {
-        return   userAddresses.stream()
-                .filter(a -> a.getId().equals(addressId) && a.getAddressType() != null && a.getAddressType().contains(addressType))
+    private Order buildOrder(UUID userId, Cart cart, Address shipping, Address billing) {
+        Order order = new Order();
+        order.setUserId(userId);
+        order.setTotalAmount(cart.getTotalAmount());
+        order.setShippingAddress(new OrderAddress(shipping));
+        order.setBillingAddress(new OrderAddress(billing));
+
+        List<OrderItem> items = cart.getCartItems().stream()
+                .map(cartItem -> buildOrderItem(order, cartItem))
+                .toList();
+
+        order.setItems(items);
+
+        return order;
+    }
+
+    private OrderItem buildOrderItem(Order order, CartItem cartItem) {
+        OrderItem item = new OrderItem();
+        item.setItem(cartItem);
+        item.setOrder(order.getId());
+        return item;
+    }
+
+    private Address validateAddress(
+            List<Address> addresses,
+            UUID addressId,
+            AddressType type
+    ) {
+        return addresses.stream()
+                .filter(address ->
+                        address.getId().equals(addressId)
+                                && address.getAddressType() != null
+                                && address.getAddressType().contains(type)
+                )
                 .findFirst()
-                .orElseThrow(() -> new ValidationException("Address not found"));
+                .orElseThrow(() ->
+                        new ValidationException(
+                                "Address %s not found or invalid for %s"
+                                        .formatted(addressId, type)
+                        )
+                );
     }
 
     @Transactional

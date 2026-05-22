@@ -46,7 +46,7 @@ public class OrderMapper {
     private OrderItemResponse mapToItemResponse(final OrderItem item) {
         return new OrderItemResponse(
                 item.getProduct().getId(),
-                item.getProduct().getName(), // Supondo que Product tenha name
+                item.getProduct().getName(),
                 item.getQuantity(),
                 item.getPriceAtPurchase()
         );

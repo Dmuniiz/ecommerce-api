@@ -2,11 +2,13 @@ package com.api.e_commerce.order.dto;
 
 import jakarta.validation.constraints.NotNull;
 
-public record CheckoutOrderRequest(
+import java.util.UUID;
+
+public record CreateOrderRequest(
         @NotNull
-        String shippingAddressId,
+        UUID shippingAddressId,
 
         @NotNull
-        String billingAddressId
+        UUID  billingAddressId
 ) {
 }

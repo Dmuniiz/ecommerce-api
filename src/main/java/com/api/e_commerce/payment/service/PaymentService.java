@@ -10,9 +10,8 @@ import com.api.e_commerce.payment.domain.enums.PaymentProvider;
 import com.api.e_commerce.payment.domain.enums.PaymentStatus;
 import com.api.e_commerce.payment.domain.enums.PaymentTransactionStatus;
 import com.api.e_commerce.payment.domain.enums.PaymentTransactionType;
-import com.api.e_commerce.payment.dto.CreateCheckoutSessionResponse;
+import com.api.e_commerce.payment.dto.PaymentGatewayResponse;
 import com.api.e_commerce.payment.gateways.PaymentStrategy;
-import com.api.e_commerce.payment.gateways.stripe.StripePaymentStrategyImpl;
 import com.api.e_commerce.payment.repository.PaymentRepository;
 import com.api.e_commerce.payment.repository.PaymentTransactionRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -33,12 +32,11 @@ public class PaymentService {
     private final PaymentTransactionRepository transactionRepository;
 
     @Transactional
-    public CreateCheckoutSessionResponse createCheckoutSession(UUID orderId, PaymentProvider provider) {
+    public PaymentGatewayResponse createCheckoutSession(UUID orderId, PaymentProvider provider) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new ValidationException("Order not found"));
 
         PaymentStrategy strategy = paymentFactory.getPaymentStrategy(provider.name());
-
         Payment payment = getOrCreatePayment(order, strategy.getProvider());
 
         try{

@@ -1,9 +1,8 @@
 package com.api.e_commerce.order;
 
-import com.api.e_commerce.order.dto.CheckoutOrderRequest;
+import com.api.e_commerce.order.dto.CreateOrderRequest;
 import com.api.e_commerce.order.dto.OrderResponse;
 import com.api.e_commerce.order.mapper.OrderMapper;
-import com.api.e_commerce.payment.service.PaymentService;
 import com.api.e_commerce.user.User;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -13,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -24,13 +24,13 @@ public class OrderController {
     private final OrderMapper orderMapper;
 
 
-    @PostMapping("{cartId}/checkout")
-    public ResponseEntity<OrderResponse> registerOrder(@PathVariable UUID cartId, @RequestBody @Valid CheckoutOrderRequest request, @AuthenticationPrincipal User user, UriComponentsBuilder builder) {
-        Order createdOrder = orderService.processCheckout(
+    @PostMapping("/{cartId}")
+    public ResponseEntity<OrderResponse> createOrder(@PathVariable UUID cartId, @RequestBody @Valid CreateOrderRequest request, @AuthenticationPrincipal User user, UriComponentsBuilder builder) {
+        var createdOrder = orderService.createOrder(
                 user.getId(),
                 cartId,
-                UUID.fromString(request.shippingAddressId()),
-                UUID.fromString(request.billingAddressId())
+                request.shippingAddressId(),
+                request.billingAddressId()
         );
 
         OrderResponse response = orderMapper.toOrderResponse(createdOrder);
@@ -39,5 +39,10 @@ public class OrderController {
 
         return ResponseEntity.created(locationUri).body(response);
     }
+
+    /*@GetMapping
+    public ResponseEntity<List<OrderResponse>> getAllOrders(@AuthenticationPrincipal User user) {
+
+    }*/
 
 }

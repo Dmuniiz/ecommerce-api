@@ -4,7 +4,7 @@ import com.api.e_commerce.config.exception.PaymentGatewayException;
 import com.api.e_commerce.order.Order;
 import com.api.e_commerce.order.orderItem.OrderItem;
 import com.api.e_commerce.payment.domain.enums.PaymentProvider;
-import com.api.e_commerce.payment.dto.CreateCheckoutSessionResponse;
+import com.api.e_commerce.payment.dto.PaymentGatewayResponse;
 import com.api.e_commerce.payment.gateways.PaymentStrategy;
 import com.api.e_commerce.payment.infrastructure.StripeProperties;
 import com.stripe.exception.StripeException;
@@ -25,7 +25,7 @@ public class StripePaymentStrategyImpl implements PaymentStrategy {
     }
 
     @Override
-    public CreateCheckoutSessionResponse createCheckoutSession(Order order) {
+    public PaymentGatewayResponse createCheckoutSession(Order order) {
 
         try {
             SessionCreateParams.Builder params =  SessionCreateParams.builder()
@@ -69,7 +69,7 @@ public class StripePaymentStrategyImpl implements PaymentStrategy {
 
             Session session = Session.create(params.build(), requestOptions);
 
-            return new  CreateCheckoutSessionResponse(
+            return new PaymentGatewayResponse(
                     session.getUrl(),
                     session.getId()
             );
