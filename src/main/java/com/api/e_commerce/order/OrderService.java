@@ -8,6 +8,7 @@ import com.api.e_commerce.cart.CartService;
 import com.api.e_commerce.cart.cartItem.CartItem;
 import com.api.e_commerce.config.exception.ValidationException;
 import com.api.e_commerce.order.orderItem.OrderItem;
+import com.api.e_commerce.payment.domain.enums.PaymentStatus;
 import com.api.e_commerce.payment.domain.enums.PaymentTransactionStatus;
 import com.api.e_commerce.payment.service.PaymentService;
 import com.api.e_commerce.product.ProductService;
@@ -46,6 +47,10 @@ public class OrderService {
 
         Order order = buildOrder(userId, cart, shipping, billing);
 
+        for(OrderItem orderItem : order.getItems()) {
+            System.out.println(orderItem.getProduct().getName());
+        }
+
         cartService.clearCartFromCreateOrder(cart);
 
         return orderRepository.save(order);
@@ -71,6 +76,10 @@ public class OrderService {
         OrderItem item = new OrderItem();
         item.setItem(cartItem);
         item.setOrder(order.getId());
+
+        System.out.println(order.getId());
+        System.out.println(item.getOrderId());
+
         return item;
     }
 
@@ -97,7 +106,7 @@ public class OrderService {
     @Transactional
     public void confirmPayment(UUID orderId, String eventId, String rawPayload) {
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new RuntimeException("Pedido não encontrado"));
+                .orElseThrow(() -> new ValidationException("Order not found"));
 
         if (order.getStatus() == OrderStatus.PAID) return;
 

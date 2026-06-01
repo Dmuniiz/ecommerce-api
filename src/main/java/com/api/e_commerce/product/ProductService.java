@@ -87,4 +87,8 @@ public class ProductService {
     public void decreaseStock(UUID productId, int quantity) {
         productRepository.decreaseStock(productId, quantity);
     }
+
+    public void increaseStock(UUID id, int quantity) {
+
+    }
 }

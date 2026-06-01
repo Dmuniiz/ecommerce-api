@@ -1,7 +1,5 @@
 package com.api.e_commerce.order;
 
-import com.api.e_commerce.address.Address;
-import com.api.e_commerce.cart.cartItem.CartItem;
 import com.api.e_commerce.order.orderItem.OrderItem;
 import jakarta.persistence.*;
 import lombok.Getter;

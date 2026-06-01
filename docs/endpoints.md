@@ -68,17 +68,16 @@
 | `PATCH` | `/orders/{id}/status` | Atualiza status | Bearer | `ADMIN` | `200`, `400`, `404`, `403` |
 
 
-
 ### **Payments:**
-| Método | Endpoint                     | Descrição                  | Auth   | Roles  | Status Code         |
-| :----- | :--------------------------- | :------------------------- | :----- | :----- | :------------------ |
-| `POST` | `/payments/intent`           | Cria intenção de pagamento | Bearer | `USER` | `200`, `400`        |
-| `POST` | `/payments/confirm`          | Confirma pagamento         | Bearer | `USER` | `200`, `400`, `402` |
-| `GET`  | `/payments/{id}`             | Busca pagamento            | Bearer | `USER` | `200`, `404`        |
-| `GET`  | `/orders/{orderId}/payments` | Pagamentos do pedido       | Bearer | `USER` | `200`, `404`        |
-| `POST` | `/payments/webhook/stripe`   | Webhook Stripe             | Public | -      | `200`               |
-
-
+| Método | Endpoint                             | Descrição            | Auth   | Roles  | Status Code         |
+| :----- |:-------------------------------------|:---------------------| :----- | :----- | :------------------ |
+| `POST` | `/{orderId}/checkout-sessiont` | Cria sessão Stripe   | Bearer | `USER` | `200`, `400`        |
+| `POST` | `/payments/success?orderId=`         | Confirma pagamento   | Bearer | `USER` | `200`, `400`, `402` |
+| `GET`  | `/payments/{id}`                     | Busca pagamento      | Bearer | `USER` | `200`, `404`        |
+| `GET`  | `/orders/{orderId}/payments`         | Pagamentos do pedido | Bearer | `USER` | `200`, `404`        |
+| `POST` | `/payments/webhook/stripe`           | Webhook Stripe       | Public | -      | `200`               |
+| `POST` | `/payments/session/{sessionId}`      | Consulta sessão      | Public | -      | `200`               |
+| `POST` | `"/{paymentId}/refund`              | Refund               | Public | -      | `200`               |
 
 ### **Addresses:**
 | Método   | Endpoint          | Descrição         | Auth   | Roles  | Status Code         |

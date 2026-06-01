@@ -277,12 +277,15 @@ Represents payment information related to an order.
 ### Main fields
 
 - `id`
-- `order`
+- `orderid`
 - `provider`
-- `providerPaymentId`
-- `status`
+- `providerPaymentIntentId`
+- `paymentStatus`
 - `amount`
-- `createdAt`
+  - `paidAt`
+- `providerCustomerId`
+- `failureReason`
+- `version`
 - `updatedAt`
 
 ### Relationships

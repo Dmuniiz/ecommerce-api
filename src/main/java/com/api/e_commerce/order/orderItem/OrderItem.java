@@ -22,7 +22,7 @@ public class OrderItem {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @JoinColumn(name = "order_id", nullable = false)
+    @Column(name = "order_id", nullable = false)
     private UUID orderId;
 
     @ManyToOne(fetch = FetchType.LAZY)

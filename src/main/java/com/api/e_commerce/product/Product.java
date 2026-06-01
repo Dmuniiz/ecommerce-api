@@ -76,8 +76,6 @@ public class Product {
         updatedAt = Instant.now();
     }
 
-    public void increaseStock() {}
-
     public void changeStatus(ProductStatus status) {
         this.productStatus = status;
     }

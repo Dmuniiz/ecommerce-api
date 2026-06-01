@@ -40,9 +40,22 @@ public class OrderController {
         return ResponseEntity.created(locationUri).body(response);
     }
 
-    /*@GetMapping
+    @GetMapping
     public ResponseEntity<List<OrderResponse>> getAllOrders(@AuthenticationPrincipal User user) {
+        List<Order> orders = orderService.listUserOrders(user.getId());
 
+        List<OrderResponse> response = orders.stream()
+                .map(orderMapper::toOrderResponse)
+                .toList();
+
+        return ResponseEntity.ok(response);
+    }
+
+    /*@PatchMapping("/{orderId}/cancel")
+    public ResponseEntity<OrderResponse> cancelOrder(@PathVariable UUID orderId, @AuthenticationPrincipal User user) {
+        Order order = orderService.cancelOrder(orderId, user.getId());
+
+        return ResponseEntity.ok(orderMapper.toOrderResponse(order));
     }*/
 
 }

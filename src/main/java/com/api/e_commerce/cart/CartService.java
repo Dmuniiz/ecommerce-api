@@ -1,8 +1,6 @@
 package com.api.e_commerce.cart;
 
-import com.api.e_commerce.cart.cartItem.CartItem;
 import com.api.e_commerce.config.exception.ValidationException;
-import com.api.e_commerce.product.IProductRepository;
 import com.api.e_commerce.product.Product;
 import com.api.e_commerce.product.ProductService;
 import com.api.e_commerce.user.UserService;
@@ -12,9 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-import java.security.InvalidParameterException;
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.UUID;
 
 @Slf4j
@@ -26,10 +22,14 @@ public class CartService {
     private final ProductService productService;
     private final UserService userService;
 
-
     public Cart listCartByUser(UUID userId) {
         return cartRepository.findByUserWithItems(userId)
-                .orElseThrow(() -> new ValidationException("Cart not found"));//List<CartItem>
+                .orElseThrow(() -> new ValidationException("Cart not found or empty"));
+    }
+
+    public Cart findByIdAndUserId(UUID cartId, UUID userId) {
+        return cartRepository.findCartByIdAndUserId(cartId, userId)
+                .orElseThrow(() -> new ValidationException("Cart not found"));
     }
 
     @Transactional
@@ -73,16 +73,28 @@ public class CartService {
         log.info("User delete item from cart");
     }
 
-    public Cart findByIdAndUserId(UUID cartId, UUID userId) {
-        return cartRepository.findByIdAndUserId(cartId, userId)
-                .orElseThrow(() -> new ValidationException("Cart not found"));
-    }
-
     @Transactional
     public void clearCartFromCreateOrder(Cart cart) {
         cart.getCartItems().clear();
         cartRepository.save(cart);
     }
 
-    /*public Cart updateQuantityItem(String itemId) {}*/
+    @Transactional
+    public void updateItemQuantity(UUID cartId, UUID itemId, int quantity){
+
+        var cart = cartRepository.getReferenceById(cartId);
+
+         var item = cart.getCartItems()
+                .stream()
+                .filter(cartItem -> cartItem.getId().equals(itemId))
+                .findFirst()
+                .orElseThrow(() -> new ValidationException("Item not found in cart"));
+
+         if (quantity > item.getProduct().getStock() || quantity <= 0) {
+            throw new ValidationException("Product not enough stock: " + item.getProduct().getStock());
+        }
+
+        item.addQuantity(quantity);
+        cartRepository.save(cart);
+    }
 }

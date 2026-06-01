@@ -27,5 +27,5 @@ public interface ICartRepository extends JpaRepository<Cart, UUID> {
     @Query("DELETE FROM CartItem ci WHERE ci.product.id = :productId AND ci.cart.user.id = :userId")
     int deleteCartItemByIdFromUser(@Param("productId") UUID productId,  @Param("userId") UUID userId);
 
-    Optional<Cart> findByIdAndUserId(UUID cartId, UUID userId);
+    Optional<Cart> findCartByIdAndUserId(UUID cartId, UUID userId);
 }

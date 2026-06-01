@@ -12,6 +12,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @Validated
 @RestController
@@ -36,8 +37,17 @@ public class CartController {
         return ResponseEntity.ok(response);
     }
 
-    /*@PatchMapping("/{itemId}")
-    public ResponseEntity<CartResponse> updateItemQuantityInCart()*/
+    @PatchMapping("/{itemId}")
+    public ResponseEntity<Void> patchItemQuantityInCart( @PathVariable UUID cartId,
+                                                         @PathVariable UUID itemId,
+                                                         @RequestParam int newQuantity,
+                                                         @AuthenticationPrincipal User user){
+
+
+       cartService.updateItemQuantity(cartId, itemId, newQuantity);
+
+        return ResponseEntity.noContent().build();
+    }
 
     @PostMapping("/items")
     public ResponseEntity<List<CartItemResponse>> addToCart(@RequestBody @Valid AddToCartRequest request, @AuthenticationPrincipal User user) {
