@@ -35,294 +35,200 @@ public class PaymentService {
     private final PaymentFactory paymentFactory;
     private final PaymentRepository paymentRepository;
     private final OrderRepository orderRepository;
-    private final PaymentTransactionRepository transactionRepository;
     private final PaymentRetryRepository retryRepository;
-    private final PaymentConfig paymentConfig;
+
+    // ============= SERVICES AUX (REFACTOR) =============
+    private final PaymentTransactionFactory transactionFactory;
+    private final PaymentCheckoutValidator checkoutValidator;
+    private final PaymentStatusValidator statusValidator;
+    private final PaymentRetryHelper retryHelper;
 
     @Transactional
     public PaymentGatewayResponse createCheckoutSession(UUID orderId, PaymentProvider provider, UUID userId) {
-        // Validate order exists and belongs to user
-        Order order = orderRepository.findOrderByIdAndUser(orderId, userId)
-                .orElseThrow(() -> new ValidationException("Order not found"));
+        Order order = checkoutValidator.validateAndFetchOrder(orderId, userId);
+        checkoutValidator.validateNoConcurrentPayment(orderId);
 
-        // Prevent concurrent payment attempts for same order
-        if (paymentConfig.isEnableConcurrentPaymentPrevention()) {
-            Payment existingPayment = paymentRepository.findByOrderId(orderId).orElse(null);
-            if (existingPayment != null && PaymentStatus.PENDING.equals(existingPayment.getPaymentStatus())) {
-                log.warn("Concurrent payment attempt for order {}", orderId);
-                throw new ValidationException("Payment already in progress for this order");
-            }
+        var payment = createPayment(order, provider);
+        return executeCheckout(payment, order, provider);
+    }
+
+    @Transactional
+    public void updatePaymentStatus(Order order, PaymentTransactionStatus status, String eventId, String rawPayload) {
+        Payment payment = findPaymentByOrderOrThrow(order.getId());
+
+        statusValidator.validateTransition(payment.getPaymentStatus(), PaymentStatus.SUCCEEDED);
+
+        payment.setPaymentStatus(PaymentStatus.SUCCEEDED);
+        payment.setPaidAt(Instant.now());
+        payment.setUpdatedAt(Instant.now());
+        paymentRepository.save(payment);
+
+        transactionFactory.recordPaymentConfirmed(payment, eventId, rawPayload);
+        transactionFactory.recordWebhookReceived(payment, eventId, rawPayload);
+
+        retryRepository.findByPaymentId(payment.getId())
+            .ifPresent(retryHelper::markAsSuccessful);
+
+        // Sync order status with payment
+        try {
+            order.syncPaymentStatus(payment.getPaymentStatus(), payment.getId());
+            orderRepository.save(order);
+        } catch (Exception e) {
+            log.warn("Failed to sync payment status into order {}: {}", order.getId(), e.getMessage());
         }
 
-        PaymentStrategy strategy = paymentFactory.getPaymentStrategy(provider.name());
-        Payment payment = getOrCreatePayment(order, strategy.getProvider());
+        log.info("Payment confirmed for order {} via webhook event {}", order.getId(), eventId);
+    }
+
+    @Transactional
+    public void retryFailedPayment(UUID paymentId) {
+        Payment payment = findPaymentOrThrow(paymentId);
+        PaymentRetry retry = findRetryOrThrow(paymentId);
+
+        if (!retryHelper.isReadyForRetry(retry)) {
+            log.debug("Payment {} not ready for retry", paymentId);
+            return;
+        }
+
+        Order order = findOrderOrThrow(payment.getOrderId());
 
         try {
-            // Call gateway with timeout
-            var response = strategy.createCheckoutSession(order);
+            var response = createGatewayCheckoutSession(payment, order);
 
             payment.attachCheckoutSessionId(response.sessionId());
             payment.setPaymentStatus(PaymentStatus.PENDING);
             paymentRepository.save(payment);
 
-            registerTransactionDetails(payment, response.sessionId(),
-                    PaymentTransactionType.CHECKOUT_SESSION_CREATED,
-                    PaymentTransactionStatus.SUCCESS, null);
-
-            log.info("Checkout session created for order {} with provider {}", orderId, provider);
-            return response;
-
-        } catch (RuntimeException e) {
-            log.error("Payment gateway error for order {}: {}", orderId, e.getMessage(), e);
-
-            registerTransactionDetails(payment, null,
-                    PaymentTransactionType.PAYMENT_FAILED,
-                    PaymentTransactionStatus.FAILURE, e.getMessage());
-
-            payment.setFailureReason(e.getMessage());
-            paymentRepository.save(payment);
-
-            // Create retry record for failed payment
-            createRetryRecord(payment, e.getMessage());
-
-            throw new PaymentGatewayException("Failed to initiate payment: " + e.getMessage());
-        }
-    }
-
-    private Payment getOrCreatePayment(Order order,  String provider) {
-        return paymentRepository.findByOrderId(order.getId())
-                .orElseGet(() -> {
-                    Payment newPayment = new Payment();
-                    newPayment.setOrderId(order.getId());
-                    newPayment.setAmount(order.getTotalAmount());
-                    newPayment.setCurrency(order.getCurrency());
-                    newPayment.setPaymentStatus(PaymentStatus.PENDING);
-                    newPayment.setProvider(PaymentProvider.valueOf(provider));
-                    return paymentRepository.save(newPayment);
-                });
-    }
-
-    private void registerTransactionDetails(Payment payment, String providerId, PaymentTransactionType type, PaymentTransactionStatus status, String errorMessage){
-        var transaction = new PaymentTransaction();
-        transaction.setPaymentId(payment.getId());
-        transaction.setType(type);
-        transaction.setProviderTransactionId(providerId);
-        transaction.setErrorMessage(errorMessage);
-        transaction.setStatus(status);
-
-        transactionRepository.save(transaction);
-    }
-
-    public void updatePaymentStatus(Order order, PaymentTransactionStatus status, String eventId, String rawPayload){
-        Payment payment = paymentRepository.findByOrderId(order.getId())
-                .orElseThrow(() -> new EntityNotFoundException("Payment record not found for order: " + order.getId()));
-
-        // Validate status transition
-        validateStatusTransition(payment.getPaymentStatus(), PaymentStatus.SUCCEEDED);
-
-        payment.setPaymentStatus(PaymentStatus.SUCCEEDED);
-        payment.setPaidAt(Instant.now());
-        payment.setUpdatedAt(Instant.now());
-
-        paymentRepository.save(payment);
-
-        // Register confirmation transaction
-        registerTransactionDetails(payment, eventId,
-                PaymentTransactionType.PAYMENT_CONFIRMED, status, null);
-
-        // Record webhook event
-        var transaction = new PaymentTransaction();
-        transaction.setPaymentId(payment.getId());
-        transaction.setType(PaymentTransactionType.WEBHOOK_RECEIVED);
-        transaction.setStatus(status);
-        transaction.setProviderEventId(eventId);
-        transaction.setRawPayload(rawPayload);
-        transaction.setCreatedAt(Instant.now());
-
-        transactionRepository.save(transaction);
-
-        // Clear retry record on success
-        retryRepository.findByPaymentId(payment.getId()).ifPresent(retry -> {
-            retry.setIsRetryable(false);
-            retryRepository.save(retry);
-        });
-
-        log.info("Payment confirmed for order {} via webhook event {}", order.getId(), eventId);
-    }
-
-    /**
-     * Retry failed payment - used by retry scheduler
-     */
-    @Transactional
-    public void retryFailedPayment(UUID paymentId) {
-        Payment payment = paymentRepository.findById(paymentId)
-                .orElseThrow(() -> new EntityNotFoundException("Payment not found"));
-
-        PaymentRetry retry = retryRepository.findByPaymentId(paymentId)
-                .orElseThrow(() -> new EntityNotFoundException("No retry record found"));
-
-        if (!retry.isReadyForRetry()) {
-            log.warn("Payment {} not ready for retry", paymentId);
-            return;
-        }
-
-        Order order = orderRepository.findById(payment.getOrderId())
-                .orElseThrow(() -> new EntityNotFoundException("Order not found"));
-
-        try {
-            PaymentStrategy strategy = paymentFactory.getPaymentStrategy(payment.getProvider().name());
-            var response = strategy.createCheckoutSession(order);
-
-            payment.attachCheckoutSessionId(response.getSessionId());
-            payment.setPaymentStatus(PaymentStatus.PENDING);
-            paymentRepository.save(payment);
-
-            retry.setAttemptCount(retry.getAttemptCount() + 1);
-            retry.setNextRetryAt(null);
-            retryRepository.save(retry);
-
-            registerTransactionDetails(payment, response.getSessionId(),
-                    PaymentTransactionType.CHECKOUT_SESSION_CREATED,
-                    PaymentTransactionStatus.SUCCESS, null);
+            retryHelper.incrementAttempt(retry, null);
+            transactionFactory.recordRetryAttempt(payment, retry.getAttemptCount());
 
             log.info("Payment {} retry attempt #{} successful", paymentId, retry.getAttemptCount());
 
         } catch (Exception e) {
-            log.error("Payment {} retry attempt #{} failed: {}", paymentId, retry.getAttemptCount() + 1, e.getMessage());
+            retryHelper.incrementAttempt(retry, e.getMessage());
 
-            retry.setAttemptCount(retry.getAttemptCount() + 1);
-            retry.setLastErrorMessage(e.getMessage());
-
-            if (retry.isExhausted()) {
-                retry.setIsRetryable(false);
+            if (retryHelper.isExhausted(retry)) {
+                retryHelper.markAsExhausted(retry, e.getMessage());
                 payment.setPaymentStatus(PaymentStatus.FAILED);
                 paymentRepository.save(payment);
-
-                registerTransactionDetails(payment, null,
-                        PaymentTransactionType.PAYMENT_FAILED,
-                        PaymentTransactionStatus.FAILURE,
-                        "Max retries exhausted: " + e.getMessage());
-
-                log.error("Payment {} max retries exhausted", paymentId);
+                transactionFactory.recordRetryExhausted(payment, e.getMessage());
             } else {
-                // Schedule next retry with exponential backoff
-                Instant nextRetry = Instant.now().plusMillis(
-                    paymentConfig.calculateBackoffDelay(retry.getAttemptCount())
-                );
-                retry.setNextRetryAt(nextRetry);
+                retryHelper.scheduleNextRetry(retry);
             }
 
-            retryRepository.save(retry);
+            log.error("Payment {} retry attempt #{} failed: {}", paymentId, retry.getAttemptCount(), e.getMessage());
         }
     }
 
-    /**
-     * Refund a paid payment
-     */
     @Transactional
     public void refundPayment(UUID paymentId, java.math.BigDecimal refundAmount, String reason) {
-        Payment payment = paymentRepository.findById(paymentId)
-                .orElseThrow(() -> new EntityNotFoundException("Payment not found"));
+        Payment payment = findPaymentOrThrow(paymentId);
 
-        if (!PaymentStatus.SUCCEEDED.equals(payment.getPaymentStatus())) {
-            throw new ValidationException("Only succeeded payments can be refunded. Current status: " + payment.getPaymentStatus());
-        }
+        checkoutValidator.validateRefund(payment, refundAmount);
 
-        if (refundAmount.compareTo(java.math.BigDecimal.ZERO) <= 0) {
-            throw new ValidationException("Refund amount must be greater than zero");
-        }
+        PaymentStrategy strategy = paymentFactory.getPaymentStrategy(payment.getProvider().name());
+        strategy.processRefund(payment.getProviderCheckoutSessionId(), refundAmount);
 
-        if (refundAmount.compareTo(payment.getAmount()) > 0) {
-            throw new ValidationException("Refund amount cannot exceed paid amount");
-        }
+        payment.setPaymentStatus(PaymentStatus.REFUNDED);
+        payment.setUpdatedAt(Instant.now());
+        paymentRepository.save(payment);
 
-        try {
-            PaymentStrategy strategy = paymentFactory.getPaymentStrategy(payment.getProvider().name());
+        transactionFactory.recordRefundCompleted(payment, UUID.randomUUID().toString(), reason);
 
-            // Call gateway refund if available - use default implementation
-            strategy.processRefund(payment.getProviderCheckoutSessionId(), refundAmount);
-
-            // Update payment status
-            if (refundAmount.compareTo(payment.getAmount()) == 0) {
-                payment.setPaymentStatus(PaymentStatus.REFUNDED);
-            } else {
-                // Partial refund - could add PARTIALLY_REFUNDED status in future
-                payment.setPaymentStatus(PaymentStatus.REFUNDED);
-            }
-
-            payment.setUpdatedAt(Instant.now());
-            paymentRepository.save(payment);
-
-            // Register refund transaction
-            registerTransactionDetails(payment, UUID.randomUUID().toString(),
-                    PaymentTransactionType.REFUND_COMPLETED,
-                    PaymentTransactionStatus.SUCCESS, reason);
-
-            log.info("Payment {} refunded successfully. Amount: {}, Reason: {}", paymentId, refundAmount, reason);
-
-        } catch (Exception e) {
-            log.error("Refund failed for payment {}: {}", paymentId, e.getMessage(), e);
-
-            registerTransactionDetails(payment, null,
-                    PaymentTransactionType.REFUND_CREATED,
-                    PaymentTransactionStatus.FAILURE, e.getMessage());
-
-            throw new PaymentGatewayException("Refund failed: " + e.getMessage());
-        }
+        log.info("Payment {} refunded: {} {}", paymentId, refundAmount, reason);
     }
 
-    /**
-     * Get payment details
-     */
     public PaymentDetailsResponse getPaymentDetails(UUID paymentId) {
-        Payment payment = paymentRepository.findById(paymentId)
-                .orElseThrow(() -> new EntityNotFoundException("Payment not found"));
+        Payment payment = findPaymentOrThrow(paymentId);
 
         return new PaymentDetailsResponse(
-                payment.getId().toString(),
-                payment.getOrderId().toString(),
-                payment.getPaymentStatus().name(),
-                payment.getProvider().name(),
-                payment.getAmount(),
-                payment.getCurrency(),
-                payment.getFailureReason(),
-                payment.getPaidAt(),
-                payment.getCreatedAt(),
-                payment.getUpdatedAt()
+            payment.getId().toString(),
+            payment.getOrderId().toString(),
+            payment.getPaymentStatus().name(),
+            payment.getProvider().name(),
+            payment.getAmount(),
+            payment.getCurrency(),
+            payment.getFailureReason(),
+            payment.getPaidAt(),
+            payment.getCreatedAt(),
+            payment.getUpdatedAt()
         );
     }
 
+    // ============= PRIVATE METHODS =============
+
     /**
-     * Validate payment status transition
+     * Executa criação de sessão de checkout no gateway
+     * Encapsula lógica comum entre createCheckoutSession e retryFailedPayment
      */
-    private void validateStatusTransition(PaymentStatus currentStatus, PaymentStatus newStatus) {
-        if (currentStatus == null || newStatus == null) {
-            throw new ValidationException("Payment status cannot be null");
-        }
+    private PaymentGatewayResponse executeCheckout(Payment payment, Order order, PaymentProvider provider) {
+        try {
+            var response = createGatewayCheckoutSession(payment, order);
 
-        // Define valid transitions
-        boolean validTransition = switch (currentStatus) {
-            case PENDING -> newStatus == PaymentStatus.SUCCEEDED ||
-                          newStatus == PaymentStatus.FAILED ||
-                          newStatus == PaymentStatus.CANCELLED;
-            case SUCCEEDED -> newStatus == PaymentStatus.REFUNDED;
-            case FAILED, CANCELLED, REFUNDED -> false;
-        };
+            payment.attachCheckoutSessionId(response.sessionId());
+            payment.setPaymentStatus(PaymentStatus.PENDING);
+            paymentRepository.save(payment);
 
-        if (!validTransition) {
-            throw new ValidationException("Invalid payment status transition from " + currentStatus + " to " + newStatus);
+            transactionFactory.recordCheckoutCreated(payment, response.sessionId());
+            log.info("Checkout created for order {} with {}", order.getId(), provider);
+
+            return response;
+
+        } catch (RuntimeException e) {
+            payment.setFailureReason(e.getMessage());
+            paymentRepository.save(payment);
+
+            transactionFactory.recordCheckoutFailed(payment, e.getMessage());
+            retryHelper.createRetryRecord(payment, e.getMessage());
+
+            log.error("Checkout failed for order {}: {}", order.getId(), e.getMessage(), e);
+            throw new PaymentGatewayException("Checkout failed: " + e.getMessage());
         }
     }
 
-    private void createRetryRecord(Payment payment, String errorMessage) {
-        PaymentRetry retry = new PaymentRetry();
-        retry.setPaymentId(payment.getId());
-        retry.setMaxAttempts(paymentConfig.getMaxRetryAttempts());
-        retry.setAttemptCount(0);
-        retry.setLastErrorMessage(errorMessage);
-        retry.setIsRetryable(true);
-        retry.setNextRetryAt(Instant.now().plusMillis(paymentConfig.getInitialBackoffMs()));
+    /**
+     * Helper para criar sessão de checkout no gateway
+     */
+    private PaymentGatewayResponse createGatewayCheckoutSession(Payment payment, Order order) {
+        PaymentStrategy strategy = paymentFactory.getPaymentStrategy(payment.getProvider().name());
+        return strategy.createCheckoutSession(order);
+    }
 
-        retryRepository.save(retry);
+    /**
+     * create payment or else get
+     */
+    private Payment createPayment(Order order, PaymentProvider provider) {
+        return paymentRepository.findByOrderId(order.getId())
+            .orElseGet(() -> {
+                Payment newPayment = new Payment();
+                newPayment.setOrderId(order.getId());
+                newPayment.setAmount(order.getTotalAmount());
+                newPayment.setCurrency(order.getCurrency());
+                newPayment.setPaymentStatus(PaymentStatus.PENDING);
+                newPayment.setProvider(provider);
+                return paymentRepository.save(newPayment);
+            });
+    }
+
+    // ============= FINDERS  =============
+
+    private Payment findPaymentOrThrow(UUID paymentId) {
+        return paymentRepository.findById(paymentId)
+            .orElseThrow(() -> new EntityNotFoundException("Payment not found: " + paymentId));
+    }
+
+    private PaymentRetry findRetryOrThrow(UUID paymentId) {
+        return retryRepository.findByPaymentId(paymentId)
+            .orElseThrow(() -> new EntityNotFoundException("Retry record not found: " + paymentId));
+    }
+
+    private Order findOrderOrThrow(UUID orderId) {
+        return orderRepository.findById(orderId)
+            .orElseThrow(() -> new EntityNotFoundException("Order not found: " + orderId));
+    }
+
+    private Payment findPaymentByOrderOrThrow(UUID orderId) {
+        return paymentRepository.findByOrderId(orderId)
+            .orElseThrow(() -> new EntityNotFoundException("Payment not found for order: " + orderId));
     }
 }

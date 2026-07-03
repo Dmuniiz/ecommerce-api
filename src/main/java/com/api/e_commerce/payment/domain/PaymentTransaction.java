@@ -3,6 +3,8 @@ package com.api.e_commerce.payment.domain;
 import com.api.e_commerce.payment.domain.enums.PaymentTransactionStatus;
 import com.api.e_commerce.payment.domain.enums.PaymentTransactionType;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
@@ -12,7 +14,9 @@ import java.util.UUID;
 @Entity
 @Table(name = "payment_transactions")
 @Setter
+@Builder
 @NoArgsConstructor
+@AllArgsConstructor
 public class PaymentTransaction {
 
     @Id
@@ -44,4 +48,5 @@ public class PaymentTransaction {
 
     @Column(name = "error_message")
     private String errorMessage;
+
 }

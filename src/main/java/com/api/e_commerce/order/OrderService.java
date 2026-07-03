@@ -8,7 +8,6 @@ import com.api.e_commerce.cart.CartService;
 import com.api.e_commerce.cart.cartItem.CartItem;
 import com.api.e_commerce.config.exception.ValidationException;
 import com.api.e_commerce.order.orderItem.OrderItem;
-import com.api.e_commerce.payment.domain.enums.PaymentStatus;
 import com.api.e_commerce.payment.domain.enums.PaymentTransactionStatus;
 import com.api.e_commerce.payment.service.PaymentService;
 import com.api.e_commerce.product.ProductService;
@@ -18,6 +17,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.UUID;
+import java.time.Instant;
 
 
 @Service
@@ -47,13 +47,13 @@ public class OrderService {
 
         Order order = buildOrder(userId, cart, shipping, billing);
 
-        for(OrderItem orderItem : order.getItems()) {
-            System.out.println(orderItem.getProduct().getName());
-        }
+        // persist order (will set ids for items if cascade configured)
+        Order saved = orderRepository.save(order);
 
+        // clear cart after order persisted
         cartService.clearCartFromCreateOrder(cart);
 
-        return orderRepository.save(order);
+        return saved;
     }
 
     private Order buildOrder(UUID userId, Cart cart, Address shipping, Address billing) {
@@ -62,9 +62,9 @@ public class OrderService {
         order.setTotalAmount(cart.getTotalAmount());
         order.setShippingAddress(new OrderAddress(shipping));
         order.setBillingAddress(new OrderAddress(billing));
-
+        order.setStatus(OrderStatus.CREATED);
         List<OrderItem> items = cart.getCartItems().stream()
-                .map(cartItem -> buildOrderItem(order, cartItem))
+                .map(cartItem -> putOrderItemFromCart(order, cartItem))
                 .toList();
 
         order.setItems(items);
@@ -72,13 +72,11 @@ public class OrderService {
         return order;
     }
 
-    private OrderItem buildOrderItem(Order order, CartItem cartItem) {
+    private OrderItem putOrderItemFromCart(Order order, CartItem cartItem) {
         OrderItem item = new OrderItem();
         item.setItem(cartItem);
-        item.setOrder(order.getId());
-
-        System.out.println(order.getId());
-        System.out.println(item.getOrderId());
+        // set owning side reference so JPA will populate order_id
+        item.setOrder(order);
 
         return item;
     }
@@ -110,12 +108,16 @@ public class OrderService {
 
         if (order.getStatus() == OrderStatus.PAID) return;
 
+        // First update payment records (will validate payment and clear retries)
+        paymentService.updatePaymentStatus(order, PaymentTransactionStatus.SUCCESS, eventId, rawPayload);
+
         for (OrderItem item : order.getItems()) {
             productService.decreaseStock(item.getProduct().getId(), item.getQuantity());
         }
 
         order.setStatus(OrderStatus.PAID);
-        paymentService.updatePaymentStatus(order, PaymentTransactionStatus.SUCCESS, eventId, rawPayload);
+        order.setPaidAt(Instant.now());
+        orderRepository.save(order);
     }
 
 }

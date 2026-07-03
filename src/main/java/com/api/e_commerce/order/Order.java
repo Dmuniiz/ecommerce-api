@@ -1,6 +1,7 @@
 package com.api.e_commerce.order;
 
 import com.api.e_commerce.order.orderItem.OrderItem;
+import com.api.e_commerce.payment.domain.enums.PaymentStatus;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -13,7 +14,11 @@ import java.util.List;
 import java.util.UUID;
 
 @Entity
-@Table(name = "orders")
+@Table(name = "orders", indexes = {
+        @Index(name = "idx_user_id", columnList = "user_id"),
+        @Index(name = "idx_payment_id", columnList = "payment_id"),
+        @Index(name = "idx_status", columnList = "status")
+})
 @Getter
 @Setter
 @NoArgsConstructor
@@ -28,7 +33,14 @@ public class Order {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private OrderStatus status = OrderStatus.PENDING;
+    private OrderStatus status = OrderStatus.CREATED;
+
+    @Column(name = "payment_id", unique = true)
+    private UUID paymentId;
+
+    @Column(name = "payment_status_snapshot")
+    @Enumerated(EnumType.STRING)
+    private PaymentStatus paymentStatusSnapshot;
 
     @Embedded
     @AttributeOverrides({
@@ -57,7 +69,7 @@ public class Order {
     private OrderAddress billingAddress;
 
     @OneToMany(
-            mappedBy = "orderId",
+            mappedBy = "order",
             cascade = {
                     CascadeType.PERSIST,
                     CascadeType.MERGE
@@ -75,9 +87,21 @@ public class Order {
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt = Instant.now();
 
+    @Column(name = "updated_at")
+    private Instant updatedAt;
+
+    @Column(name = "paid_at")
+    private Instant paidAt;
+
+    @Column(name = "shipped_at")
+    private Instant shippedAt;
+
+    @Version
+    private Long version;
+
     public void cancel() {
-        if(this.status != OrderStatus.PENDING) {
-            throw new  IllegalStateException("Cannot cancel this order.");
+        if(this.status == OrderStatus.SHIPPED || this.status == OrderStatus.DELIVERED || this.status == OrderStatus.REFUNDED) {
+            throw new  IllegalStateException("Cannot cancel this order in its current state.");
         }
         this.status = OrderStatus.CANCELLED;
     }
@@ -87,9 +111,45 @@ public class Order {
     }
 
     public void markAsPaid() {
-        if(this.status != OrderStatus.PENDING) {
-            throw new  IllegalStateException("Cannot mark this order as paid");
+        if(this.status != OrderStatus.PENDING_PAYMENT && this.status != OrderStatus.CREATED) {
+            throw new  IllegalStateException("Cannot mark this order as paid from state: " + this.status);
         }
         this.status = OrderStatus.PAID;
+        this.paidAt = Instant.now();
+        this.updatedAt = Instant.now();
+    }
+
+    @PrePersist
+    public void prePersist() {
+        this.createdAt = Instant.now();
+        this.updatedAt = Instant.now();
+    }
+
+    @PreUpdate
+    public void preUpdate() {
+        this.updatedAt = Instant.now();
+    }
+
+    /**
+     * Synchronize payment status into order
+     */
+    public void syncPaymentStatus(PaymentStatus newPaymentStatus, UUID paymentId) {
+        this.paymentId = paymentId;
+        this.paymentStatusSnapshot = newPaymentStatus;
+
+        switch (newPaymentStatus) {
+            case PENDING -> this.status = OrderStatus.PENDING_PAYMENT;
+            case SUCCEEDED -> {
+                this.status = OrderStatus.PAID;
+                this.paidAt = Instant.now();
+            }
+            case FAILED -> this.status = OrderStatus.PAYMENT_FAILED;
+            case REFUNDED -> this.status = OrderStatus.REFUNDED;
+            case CANCELLED -> this.status = OrderStatus.CANCELLED;
+            default -> {
+                // noop for unknown statuses
+            }
+        }
+        this.updatedAt = Instant.now();
     }
 }

@@ -17,13 +17,17 @@ public class SetupDataLoader implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        if(userRepository.count() == 0){
-            userRepository.save(
-                    new User(
-                            "ADMIN",
-                            "admin@local.com",
-                            "{bcrypt}$2a$12$4eOZVKqzM4iK6Q/V1kTZr.v65REjm5QkoS9LpkGpfZ7G1ld2oukJa",
-                    roleService.addRole(RoleType.ADMIN)));
+        if (userRepository.count() == 0) {
+            User adminUser = new User(
+                    "ADMIN",
+                    "admin@local.com",
+                    "{bcrypt}$2a$12$4eOZVKqzM4iK6Q/V1kTZr.v65REjm5QkoS9LpkGpfZ7G1ld2oukJa",
+                    roleService.addRole(RoleType.ADMIN)
+            );
+            adminUser.setCpf("00000000000");
+            adminUser.setPhoneNumber("00000000000");
+            adminUser.setIsActive(true);
+            userRepository.save(adminUser);
         }
     }
 }
