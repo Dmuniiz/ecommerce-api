@@ -1,0 +1,9 @@
+.git
+.idea
+*.iml
+.gitattributes
+HELP.md
+README.md
+.gitignore
+.vscode
+.docs
