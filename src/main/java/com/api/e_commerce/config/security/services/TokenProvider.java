@@ -12,10 +12,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
-import java.util.Base64;
-import java.util.Date;
+import java.time.Clock;
+import java.time.Duration;
+import java.util.List;
+import java.util.UUID;
 
 @Component
 public class TokenProvider {
@@ -23,16 +23,29 @@ public class TokenProvider {
     @Value("${jwt.secret}")
     private String secretKey;
 
+    @Value("${jwt.issuer:ecommerce-api}")
+    private String issuer;
+
+    @Value("${jwt.audience:ecommerce-client}")
+    private String audience;
+
+    @Value("${jwt.access-token-expiration-minutes:15}")
+    private long accessTokenExpirationMinutes;
+
+    private final Clock clock = Clock.systemUTC();
+
     public String generateToken(User user){
-        // Implement token generation logic here (e.g., using JWT)
         try {
-            Algorithm algorithm = Algorithm.HMAC256(encodedSecretKey());
+            Instant now = clock.instant();
+            Algorithm algorithm = Algorithm.HMAC256(validatedSecretKey());
             return JWT.create()
-                    .withIssuer("auth-api")
-                    .withAudience("ecommerce-client")
-                    .withClaim("role", user.getRoles().getFirst().getAuthority())
+                    .withJWTId(UUID.randomUUID().toString())
+                    .withIssuer(issuer)
+                    .withAudience(audience)
+                    .withClaim("userId", user.getId().toString())
+                    .withClaim("roles", extractRoles(user))
                     .withSubject(user.getUsername())
-                    .withIssuedAt(new Date(System.currentTimeMillis()))
+                    .withIssuedAt(now)
                     .withExpiresAt(expireAt())
                     .sign(algorithm);
         } catch (JWTCreationException jwtEx){
@@ -44,11 +57,11 @@ public class TokenProvider {
         DecodedJWT decodedJWT;
 
         try {
-            Algorithm algorithm = Algorithm.HMAC256(encodedSecretKey());
+            Algorithm algorithm = Algorithm.HMAC256(validatedSecretKey());
 
             JWTVerifier verifier = JWT.require(algorithm)
-                    .withIssuer("auth-api")
-                    .withAudience("ecommerce-client")
+                    .withIssuer(issuer)
+                    .withAudience(audience)
                     .build();
 
             decodedJWT = verifier.verify(token);
@@ -56,18 +69,30 @@ public class TokenProvider {
             return decodedJWT.getSubject();
 
         } catch (JWTVerificationException ex) {
-            throw new ValidationException("Invalid or expired token: "+ ex.getMessage());
+            throw ex;
         }
     }
 
-    private String encodedSecretKey() {
-        return Base64.getEncoder().encodeToString(secretKey.getBytes());
+    public long getAccessTokenExpiresInSeconds() {
+        return Duration.ofMinutes(accessTokenExpirationMinutes).toSeconds();
     }
 
     private Instant expireAt() {
-        return LocalDateTime.now().plusMinutes(15).toInstant(ZoneOffset.of("-03:00"));
+        return clock.instant().plus(Duration.ofMinutes(accessTokenExpirationMinutes));
     }
 
+    private List<String> extractRoles(User user) {
+        return user.getRoles()
+                .stream()
+                .map(role -> role.getAuthority())
+                .toList();
+    }
 
+    private String validatedSecretKey() {
+        if (secretKey == null || secretKey.length() < 32) {
+            throw new ValidationException("JWT secret must contain at least 32 characters");
+        }
+        return secretKey;
+    }
 
 }

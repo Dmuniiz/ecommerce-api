@@ -19,7 +19,6 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.DelegatingPasswordEncoder;
-import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
@@ -54,7 +53,12 @@ public class SecurityConfigurations {
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(sn -> sn.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(req -> req
-                        .requestMatchers("/api/v1/auth/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/login").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/register").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/refresh-token").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/logout").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/auth/me").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/logout-all").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/v1/products/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.GET, "/api/v1/products/**").permitAll()
                         .requestMatchers(HttpMethod.POST,"/api/v1/categories").hasRole("ADMIN")
@@ -63,7 +67,6 @@ public class SecurityConfigurations {
                         .requestMatchers(HttpMethod.PUT,"/api/v1/users/me").hasRole("USER")
                         .requestMatchers(HttpMethod.GET,"/api/v1/addresses").hasRole("USER")
                         .requestMatchers(HttpMethod.POST,"/api/v1/addresses").hasRole("USER")
-                        .requestMatchers("/api/v1/users","/api/v1/users/{id}").hasRole("ADMIN")
                         .requestMatchers("/api/v1/users","/api/v1/users/{id}").hasRole("ADMIN")
                         .anyRequest().authenticated())
                .exceptionHandling(ex -> ex
@@ -82,7 +85,6 @@ public class SecurityConfigurations {
         Map<String, PasswordEncoder> encoders = new HashMap<>();
 
         encoders.put(idForEncode, new BCryptPasswordEncoder());
-        encoders.put("noop", NoOpPasswordEncoder.getInstance());
 
         return new DelegatingPasswordEncoder(idForEncode, encoders);
     }

@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -23,6 +24,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final UserServiceImpl userService;
     private final TokenProvider tokenProvider;
+    private final AuthenticationEntryPoint authenticationEntryPoint;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
@@ -39,12 +41,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     var user = userService.loadUserByUsername(username); // Validate the token and load user details
 
                     var authentication = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
+                    authentication.setDetails(request);
 
                     SecurityContextHolder.getContext().setAuthentication(authentication);  //set the authentication in the security context
                 }
             } catch (JWTVerificationException e) {
                 log.warn("Received invalid auth token");
-                throw new JWTVerificationException("Invalid or expired token: " + e.getMessage());
+                SecurityContextHolder.clearContext();
+                authenticationEntryPoint.commence(request, response, new org.springframework.security.authentication.BadCredentialsException("Invalid or expired token"));
+                return;
             }
             filterChain.doFilter(request, response);
         }
