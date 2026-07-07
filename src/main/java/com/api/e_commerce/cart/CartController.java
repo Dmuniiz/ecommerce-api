@@ -3,6 +3,7 @@ package com.api.e_commerce.cart;
 import com.api.e_commerce.cart.dto.AddToCartRequest;
 import com.api.e_commerce.cart.dto.CartItemResponse;
 import com.api.e_commerce.cart.dto.CartResponse;
+import com.api.e_commerce.cart.dto.UpdateCartItemRequest;
 import com.api.e_commerce.user.User;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -10,9 +11,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-import java.util.UUID;
 
 @Validated
 @RestController
@@ -25,48 +23,44 @@ public class CartController {
     @GetMapping
     public ResponseEntity<CartResponse> getCurrentUserCart(@AuthenticationPrincipal User user){
 
-        var cart = cartService.listCartByUser(user.getId());
+        return ResponseEntity.ok(toResponse(cartService.getOrCreateCartByUser(user.getId())));
+    }
 
+    @PatchMapping("/items/{productId}")
+    public ResponseEntity<CartResponse> patchItemQuantityInCart(@PathVariable String productId,
+                                                                @RequestBody @Valid UpdateCartItemRequest request,
+                                                                @AuthenticationPrincipal User user){
+
+        var cart = cartService.updateItemQuantity(productId, request.quantity(), user.getId());
+        return ResponseEntity.ok(toResponse(cart));
+    }
+
+    @PostMapping("/items")
+    public ResponseEntity<CartResponse> addToCart(@RequestBody @Valid AddToCartRequest request, @AuthenticationPrincipal User user) {
+        var cart = cartService.addItemToCart(request.productId(), request.quantity(), user.getId());
+
+        return ResponseEntity.ok(toResponse(cart));
+    }
+
+    @DeleteMapping("/items/{productId}")
+    public ResponseEntity<CartResponse> removeFromCart(@PathVariable String productId, @AuthenticationPrincipal User user) {
+        var cart = cartService.deleteItemFromCart(productId, user.getId());
+
+        return ResponseEntity.ok(toResponse(cart));
+    }
+
+    @DeleteMapping("/items")
+    public ResponseEntity<Void> clearCart(@AuthenticationPrincipal User user) {
+        cartService.clearCart(user.getId());
+        return ResponseEntity.noContent().build();
+    }
+
+    private CartResponse toResponse(Cart cart) {
         var cartItems = cart.getCartItems()
                 .stream()
                 .map(CartItemResponse::fromEntity)
                 .toList();
 
-        var response = CartResponse.fromEntity(cart, cartItems);
-
-        return ResponseEntity.ok(response);
+        return CartResponse.fromEntity(cart, cartItems);
     }
-
-    @PatchMapping("/{itemId}")
-    public ResponseEntity<Void> patchItemQuantityInCart( @PathVariable UUID cartId,
-                                                         @PathVariable UUID itemId,
-                                                         @RequestParam int newQuantity,
-                                                         @AuthenticationPrincipal User user){
-
-
-       cartService.updateItemQuantity(cartId, itemId, newQuantity);
-
-        return ResponseEntity.noContent().build();
-    }
-
-    @PostMapping("/items")
-    public ResponseEntity<List<CartItemResponse>> addToCart(@RequestBody @Valid AddToCartRequest request, @AuthenticationPrincipal User user) {
-        var cart = cartService.addItemToCart(request.productId(), request.quantity(), user.getId());
-
-        List<CartItemResponse> cartItemResponseList = cart.getCartItems()
-                .stream()
-                .map(CartItemResponse::fromEntity)
-                .toList();
-
-        return ResponseEntity.ok(cartItemResponseList);
-    }
-
-    @DeleteMapping("/{itemId}")
-    public ResponseEntity<Void> removeFromCart(@PathVariable String itemId, @AuthenticationPrincipal User user) {
-        cartService.deleteItemFromCart(itemId, user.getId());
-
-        return ResponseEntity.noContent().build();
-    }
-
-
 }

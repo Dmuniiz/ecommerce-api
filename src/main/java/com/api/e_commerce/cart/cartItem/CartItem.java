@@ -44,8 +44,11 @@ public class CartItem {
         this.quantity += qty;
     }
 
+    public void changeQuantity(Integer quantity) {
+        this.quantity = quantity;
+    }
+
     public BigDecimal getSubTotal() {
-        //unitPrice * quantity
         return unitPrice.multiply(BigDecimal.valueOf(quantity));
     }
 

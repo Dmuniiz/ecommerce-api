@@ -11,7 +11,6 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 @Entity
@@ -37,7 +36,7 @@ public class Cart {
     @Column(name = "created_at", updatable = false)
     private Instant createdAt;
 
-    @Column(name = "updated_at", updatable = false)
+    @Column(name = "updated_at")
     private Instant updatedAt;
 
 
@@ -59,7 +58,7 @@ public class Cart {
                         cartItem -> cartItem.addQuantity(quantity),
                         () -> cartItems.add(new CartItem(this, product, quantity))
                 );
-        calculateTotalAmount();
+        refreshTotals();
     }
 
     public boolean findExistingItemByProduct(Product product) {
@@ -67,9 +66,47 @@ public class Cart {
                 .anyMatch(c -> c.getProduct().getId().equals(product.getId()));
     }
 
+    public Integer getQuantityByProductId(UUID productId) {
+        return cartItems.stream()
+                .filter(c -> c.getProduct().getId().equals(productId))
+                .map(CartItem::getQuantity)
+                .findFirst()
+                .orElse(0);
+    }
+
+    public void changeItemQuantity(UUID productId, Integer quantity) {
+        cartItems.stream()
+                .filter(c -> c.getProduct().getId().equals(productId))
+                .findFirst()
+                .orElseThrow(() -> new com.api.e_commerce.config.exception.ValidationException("Item not found in cart"))
+                .changeQuantity(quantity);
+
+        refreshTotals();
+    }
+
+    public boolean removeItemByProductId(UUID productId) {
+        boolean removed = cartItems.removeIf(c -> c.getProduct().getId().equals(productId));
+        if (removed) {
+            refreshTotals();
+        }
+        return removed;
+    }
+
+    public void clearItems() {
+        cartItems.clear();
+        refreshTotals();
+    }
+
+    private void refreshTotals() {
+        calculateTotalAmount();
+        updatedAt = Instant.now();
+    }
+
     @PrePersist
     protected void onCreate() {
-        createdAt = Instant.now();
+        Instant now = Instant.now();
+        createdAt = now;
+        updatedAt = now;
     }
 
     @PreUpdate
