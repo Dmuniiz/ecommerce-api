@@ -6,9 +6,12 @@ import java.util.UUID;
 
 public record CreateOrderRequest(
         @NotNull
+        UUID cartId,
+
+        @NotNull
         UUID shippingAddressId,
 
         @NotNull
-        UUID  billingAddressId
+        UUID billingAddressId
 ) {
 }

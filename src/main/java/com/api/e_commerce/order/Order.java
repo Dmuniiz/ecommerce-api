@@ -70,10 +70,7 @@ public class Order {
 
     @OneToMany(
             mappedBy = "order",
-            cascade = {
-                    CascadeType.PERSIST,
-                    CascadeType.MERGE
-            },
+            cascade = CascadeType.ALL,
             orphanRemoval = true
     )
     private List<OrderItem> items = new ArrayList<>();
@@ -107,7 +104,15 @@ public class Order {
     }
 
     public void setItems(List<OrderItem> orderItems) {
-        this.items.addAll(orderItems);
+        this.items.clear();
+        if(orderItems != null) {
+            orderItems.forEach(this::addItem);
+        }
+    }
+
+    public void addItem(OrderItem item) {
+        item.setOrder(this);
+        this.items.add(item);
     }
 
     public void markAsPaid() {
