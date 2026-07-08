@@ -33,9 +33,6 @@ public class PaymentCheckoutValidator {
     private final PaymentRepository paymentRepository;
     private final PaymentConfig paymentConfig;
 
-    /**
-     * @throws ValidationException se order não existe ou não pertence ao usuário
-     */
     public Order validateAndFetchOrder(UUID orderId, UUID userId) {
         return orderRepository.findOrderByIdAndUser(orderId, userId)
             .orElseThrow(() -> {
@@ -61,20 +58,13 @@ public class PaymentCheckoutValidator {
             });
     }
 
-    /**
-     * Valida refund (comum a todas as operações de refund)
-     *
-     * @throws ValidationException se refund não é válido
-     */
     public void validateRefund(Payment payment, BigDecimal refundAmount) {
-        // Validar status do pagamento
         if (!PaymentStatus.SUCCEEDED.equals(payment.getPaymentStatus())) {
             throw new ValidationException(
                 "Only succeeded payments can be refunded. Current status: " + payment.getPaymentStatus()
             );
         }
 
-        // Validar amount positivo
         if (refundAmount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new ValidationException("Refund amount must be greater than zero");
         }
@@ -96,10 +86,6 @@ public class PaymentCheckoutValidator {
         }
     }
 
-    /**
-     * Valida que order está em estado correto para checkout
-     * @throws ValidationException se order não está em estado válido
-     */
     public void validateOrderCheckoutable(Order order) {
         // Aqui você pode adicionar lógica adicional se necessário
         // Por exemplo: verificar se order já foi pago, etc

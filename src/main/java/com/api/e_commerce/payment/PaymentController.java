@@ -101,7 +101,7 @@ public class PaymentController {
             event = Webhook.constructEvent(
                     rawPayload, 
                     sigHeader, 
-                    stripeProperties.getWEBHOOK_SECRET_KEY()
+                    stripeProperties.getWEBHOOK_SECRET()
             );
         } catch (SignatureVerificationException e) {
             log.warn("Invalid Stripe webhook signature");

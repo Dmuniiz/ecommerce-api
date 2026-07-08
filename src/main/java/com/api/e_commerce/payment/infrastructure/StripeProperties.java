@@ -13,11 +13,12 @@ import org.springframework.validation.annotation.Validated;
 @ConfigurationProperties(prefix = "stripe")
 public class StripeProperties {
 
+    @Value("${stripe.secret-key}")
     @NotBlank(message = "Stripe secret key must not be blank")
     private String SECRET_KEY;
 
     @Value("${stripe.webhook.secret}")
     @NotBlank(message = "Webhook secret key must not be blank")
-    private String WEBHOOK_SECRET_KEY;
+    private String WEBHOOK_SECRET;
 
 }

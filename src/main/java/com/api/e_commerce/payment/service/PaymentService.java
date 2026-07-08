@@ -1,23 +1,18 @@
 package com.api.e_commerce.payment.service;
 
 import com.api.e_commerce.config.exception.PaymentGatewayException;
-import com.api.e_commerce.config.exception.ValidationException;
 import com.api.e_commerce.order.Order;
 import com.api.e_commerce.order.OrderRepository;
 import com.api.e_commerce.payment.domain.Payment;
 import com.api.e_commerce.payment.domain.PaymentRetry;
-import com.api.e_commerce.payment.domain.PaymentTransaction;
 import com.api.e_commerce.payment.domain.enums.PaymentProvider;
 import com.api.e_commerce.payment.domain.enums.PaymentStatus;
 import com.api.e_commerce.payment.domain.enums.PaymentTransactionStatus;
-import com.api.e_commerce.payment.domain.enums.PaymentTransactionType;
 import com.api.e_commerce.payment.dto.PaymentDetailsResponse;
 import com.api.e_commerce.payment.dto.PaymentGatewayResponse;
 import com.api.e_commerce.payment.gateways.PaymentStrategy;
-import com.api.e_commerce.payment.infrastructure.PaymentConfig;
 import com.api.e_commerce.payment.repository.PaymentRepository;
 import com.api.e_commerce.payment.repository.PaymentRetryRepository;
-import com.api.e_commerce.payment.repository.PaymentTransactionRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
