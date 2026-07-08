@@ -1,9 +1,8 @@
 package com.api.e_commerce.product;
 
-import com.api.e_commerce.product.categories.CategoryService;
 import com.api.e_commerce.product.dto.CreateProductRequest;
 import com.api.e_commerce.product.dto.ProductResponse;
-import com.api.e_commerce.user.User;
+import com.api.e_commerce.product.mapper.ProductMapper;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -12,11 +11,8 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.UUID;
 
 
 @RestController
@@ -25,12 +21,14 @@ import java.util.UUID;
 public class ProductController {
 
     private final ProductService productService;
+    private final ProductMapper productMapper;
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     @ResponseStatus(HttpStatus.CREATED)
     public ProductResponse createProduct(@Valid @RequestBody CreateProductRequest request){
         var newProduct = productService.create(request);
-        return ProductResponse.fromEntity(newProduct);
+        return productMapper.toResponse(newProduct);
     }
 
     @PatchMapping("/{id}")
@@ -43,12 +41,11 @@ public class ProductController {
         return ResponseEntity.noContent().build();
     }
 
-
     @GetMapping("/{id}")
     public ResponseEntity<ProductResponse> getProductById(@PathVariable("/id") String id){
         var product = productService.findByStringParamIdConvertToUUID(id);
 
-        return ResponseEntity.ok(ProductResponse.fromEntity(product));
+        return ResponseEntity.ok(productMapper.toResponse(product));
     }
 
     @GetMapping
@@ -61,15 +58,18 @@ public class ProductController {
                 .stream()
                 .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"));
 
-        Page<Product> products = productService.findAllProductsPageable(status, pageable, isAdmin);
+        Page<Product> products;
+        if (isAdmin) {
+            products = productService.findAllProductsForAdmin(status, pageable);
+        } else {
+            products = productService.findAllProductsForCustomer(pageable);
+        }
 
-        var response = products.map(ProductResponse::fromEntity);
-
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(productMapper.toResponsePage(products));
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")//admin
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteProduct(@PathVariable String productId){
 
         var product = productService.findByStringParamIdConvertToUUID(productId);
@@ -78,9 +78,5 @@ public class ProductController {
 
         return ResponseEntity.noContent().build();
     }
-
-    //deleteProduct
-    //throw new BusinessException("Produtos em rascunho precisam de descrição para serem publicados.");
-
 
 }

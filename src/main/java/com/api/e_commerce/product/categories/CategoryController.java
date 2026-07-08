@@ -2,9 +2,10 @@ package com.api.e_commerce.product.categories;
 
 import com.api.e_commerce.product.categories.dto.CategoryResponse;
 import com.api.e_commerce.product.categories.dto.CreateCategoryRequest;
+import com.api.e_commerce.product.categories.dto.UpdateCategoryRequest;
+import com.api.e_commerce.product.categories.mapper.CategoryMapper;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.CacheControl;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -19,28 +20,30 @@ import java.util.UUID;
 public class CategoryController {
 
     private final CategoryService categoryService;
+    private final CategoryMapper categoryMapper;
 
     @PostMapping
-    public ResponseEntity<CategoryResponse> createCategory(@RequestBody @Valid CreateCategoryRequest request, UriComponentsBuilder uriBuilder){
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<CategoryResponse> createCategory(
+            @RequestBody @Valid CreateCategoryRequest request,
+            UriComponentsBuilder uriBuilder){
         var category = categoryService.create(request.name(), request.description());
 
-        var uri = uriBuilder.path("/{name}")
-                .buildAndExpand(category.getName())
-                .encode()
+        var uri = uriBuilder.path("/{categoryId}")
+                .buildAndExpand(category.getId()).encode()
                 .toUri();
 
-        return ResponseEntity.created(uri).body(CategoryResponse.fromEntity(category));
+        return ResponseEntity.created(uri).body(categoryMapper.toResponse(category));
     }
 
     @GetMapping("/{name}")
     public ResponseEntity<CategoryResponse> getCategoryByName(@PathVariable("name") String nameCategory){
 
         var category = categoryService.findByName(nameCategory);
-        var response = CategoryResponse.fromEntity(category);
+        var response = categoryMapper.toResponse(category);
 
         return ResponseEntity.ok().body(response);
     }
-
 
     @GetMapping
     public ResponseEntity<List<CategoryResponse>> getAllCategories(){
@@ -48,11 +51,25 @@ public class CategoryController {
 
         List<CategoryResponse> response = categories
                 .stream()
-                .map(c -> CategoryResponse.fromEntity(c))
+                .map(categoryMapper::toResponse)
                 .toList();
 
         return ResponseEntity.ok().body(response);
     }
 
+    @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<CategoryResponse> updateCategory(
+            @PathVariable("id") UUID categoryId,
+            @Valid @RequestBody UpdateCategoryRequest request) {
+        var category = categoryService.update(categoryId, request);
+        return ResponseEntity.ok(categoryMapper.toResponse(category));
+    }
 
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> deleteCategory(@PathVariable("id") UUID categoryId) {
+        categoryService.delete(categoryId);
+        return ResponseEntity.noContent().build();
+    }
 }

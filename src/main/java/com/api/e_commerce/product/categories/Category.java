@@ -1,7 +1,6 @@
 package com.api.e_commerce.product.categories;
 
 
-import com.api.e_commerce.product.categories.dto.CreateCategoryRequest;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -31,6 +30,12 @@ public class Category {
     @Column(name = "created_at", updatable = false)
     private Instant createdAt;
 
+    @Column(name = "updated_at")
+    private Instant updatedAt;
+
+    @Version
+    private Long version;
+
     public Category(String name, String description) {
         this.name = name;
         this.description = description;
@@ -53,5 +58,16 @@ public class Category {
     @PrePersist
     protected void onCreate() {
         createdAt = Instant.now();
+        updatedAt = Instant.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = Instant.now();
+    }
+
+    public void update(String name, String description) {
+        this.name = name;
+        this.description = description;
     }
 }

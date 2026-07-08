@@ -21,4 +21,11 @@ public interface IProductRepository extends JpaRepository<Product, UUID>  {
     @Modifying
     @Query("UPDATE Product p SET p.stock = p.stock - :stockQuantity WHERE p.id = :productId AND p.stock >= :stockQuantity")
     int decreaseStock(UUID productId, int stockQuantity);
+
+    @Modifying
+    @Query("UPDATE Product p SET p.stock = p.stock + :stockQuantity WHERE p.id = :productId")
+    void increaseStock(UUID productId, int stockQuantity);
+
+    @Query("SELECT COUNT(p) > 0 FROM Product p WHERE p.category.id = :categoryId")
+    boolean existsByCategory(UUID categoryId);
 }

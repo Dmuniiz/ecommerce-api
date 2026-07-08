@@ -55,6 +55,9 @@ public class Product {
     @Column(nullable = false)
     private Instant  updatedAt;
 
+    @Version
+    private Long version;
+
     public Product(CreateProductRequest data, Category category, String sku) {
         this.name = data.name();
         this.sku = sku;
@@ -77,6 +80,25 @@ public class Product {
     }
 
     public void changeStatus(ProductStatus status) {
+        validateStatusTransition(this.productStatus, status);
         this.productStatus = status;
+        this.updatedAt = Instant.now();
+    }
+
+    private void validateStatusTransition(ProductStatus currentStatus, ProductStatus newStatus) {
+        if (currentStatus == null || newStatus == null) {
+            throw new ValidationException("Product status cannot be null");
+        }
+
+        // Define valid transitions
+        boolean validTransition = switch (currentStatus) {
+            case DRAFT, OUT_OF_STOCK -> newStatus == ProductStatus.AVAILABLE || newStatus == ProductStatus.INACTIVE;
+            case AVAILABLE -> newStatus == ProductStatus.OUT_OF_STOCK || newStatus == ProductStatus.INACTIVE || newStatus == ProductStatus.DRAFT;
+            case INACTIVE -> false; // Terminal state - no transitions allowed
+        };
+
+        if (!validTransition) {
+            throw new ValidationException("Invalid product status transition from " + currentStatus + " to " + newStatus);
+        }
     }
 }
