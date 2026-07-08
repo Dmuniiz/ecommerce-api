@@ -3,11 +3,10 @@ package com.api.e_commerce.address;
 import com.api.e_commerce.address.dto.CreateAddressRequest;
 import com.api.e_commerce.user.User;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.time.Instant;
 import java.util.Set;
@@ -18,14 +17,16 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
+@Setter
 public class Address {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(name = "user_id", nullable = false)
-    private UUID userId;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
     private String street;
     private String number;
@@ -48,6 +49,9 @@ public class Address {
     @Column(name = "updated_at")
     private Instant updatedAt;
 
+    @Version
+    private Long version;
+
     @ElementCollection(targetClass = AddressType.class)
     @CollectionTable(
             name = "address_type",
@@ -57,8 +61,8 @@ public class Address {
     private Set<AddressType> addressType;
 
 
-    public Address(CreateAddressRequest data, UUID userId) {
-        this.userId = userId;
+    public Address(CreateAddressRequest data, User user) {
+        this.user = user;
         this.street = data.street();
         this.number = data.number();
         this.complement = data.complement();
@@ -69,10 +73,6 @@ public class Address {
         this.country = data.country();
         this.isDefault = data.isDefault();
         this.addressType = data.addressType();
-    }
-
-    public void setIsDefault(Boolean isDefault) {
-        this.isDefault = isDefault;
     }
 
     @PrePersist
