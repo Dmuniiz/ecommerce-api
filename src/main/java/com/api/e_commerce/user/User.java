@@ -1,6 +1,7 @@
 package com.api.e_commerce.user;
 
 
+import com.api.e_commerce.address.Address;
 import com.api.e_commerce.role.Role;
 import com.api.e_commerce.user.dto.UserUpdateRequest;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -60,11 +61,14 @@ public class User implements UserDetails {
     @Column(name = "is_active", nullable = false, columnDefinition = "boolean default true")
     private Boolean isActive = true;
 
-    @OneToMany(fetch = FetchType.EAGER)
+    @OneToMany(fetch = FetchType.LAZY)
     @JoinTable(name = "user_roles",
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "role_id"))
     private List<Role> roles = new ArrayList<>();
+
+    @Version
+    private Long version;
 
     public User(String name, String email, String passwordEncoded, List<Role> roles) {
         this.name = name;
@@ -105,7 +109,7 @@ public class User implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return true;
+        return Boolean.TRUE.equals(isActive);
     }
 
     @PrePersist
@@ -118,6 +122,5 @@ public class User implements UserDetails {
     protected void onUpdate() {
         updatedAt = Instant.now();
     }
-
 
 }
