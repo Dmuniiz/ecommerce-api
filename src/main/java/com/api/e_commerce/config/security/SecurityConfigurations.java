@@ -50,7 +50,10 @@ public class SecurityConfigurations {
 
        http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                .csrf(AbstractHttpConfigurer::disable)
+                .csrf(csrf -> csrf
+                        .ignoringRequestMatchers("/api/v1/payments/webhook")
+                        .disable()
+                )
                 .sessionManagement(sn -> sn.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(req -> req
                         .requestMatchers(
@@ -58,6 +61,14 @@ public class SecurityConfigurations {
                                 "/swagger-ui/**",
                                 "/swagger-ui.html"
                         ).permitAll()
+                        .requestMatchers("/api/v1/payments/webhook/stripe").permitAll()
+
+                        .requestMatchers(
+                                "/api/v1/payments/*/checkout-session",
+                                "/api/v1/payments/*",
+                                "/api/v1/payments/*/refund"
+                        ).authenticated()
+
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/login").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/register").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/refresh-token").permitAll()

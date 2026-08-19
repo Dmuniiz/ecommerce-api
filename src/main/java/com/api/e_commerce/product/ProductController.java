@@ -42,7 +42,7 @@ public class ProductController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ProductResponse> getProductById(@PathVariable("/id") String id){
+    public ResponseEntity<ProductResponse> getProductById(@PathVariable String id){
         var product = productService.findByStringParamIdConvertToUUID(id);
 
         return ResponseEntity.ok(productMapper.toResponse(product));

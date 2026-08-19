@@ -7,6 +7,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -40,7 +42,9 @@ public class PaymentTransaction {
     @Column(name = "provider_transaction_id")
     private String providerTransactionId;
 
-    @Column(name = "raw_payload", columnDefinition = "jsonb")
+
+    @Column(name = "raw_payload")
+    @JdbcTypeCode(SqlTypes.JSON)
     private String rawPayload;
 
     @Column(name = "created_at", updatable = false)
