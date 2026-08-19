@@ -25,7 +25,9 @@ public class ProductService {
 
     @Transactional(readOnly = true)
     public Page<Product> findAllProductsForAdmin(ProductStatus status, Pageable pageable) {
+
         log.debug("Fetching all products for admin with status filter: {}", status);
+
         if (status != null) {
             return productRepository.findByProductStatus(status, pageable);
         }

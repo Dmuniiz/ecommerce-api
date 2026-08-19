@@ -22,9 +22,11 @@ public class UserServiceImpl implements UserService {
     private final IUserRepository userRepository;
     private final RoleService roleService;
 
+    @Transactional(readOnly = true)
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         log.debug("Loading user by username: {}", username);
+
         return userRepository.findByEmailIgnoreCase(username)
                 .orElseThrow(() -> {
                     log.warn("User not found with email: {}", username);

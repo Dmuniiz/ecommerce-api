@@ -3,7 +3,6 @@ package com.api.e_commerce.user;
 
 import com.api.e_commerce.address.Address;
 import com.api.e_commerce.role.Role;
-import com.api.e_commerce.user.dto.UserUpdateRequest;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -11,6 +10,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.Instant;
@@ -61,7 +61,15 @@ public class User implements UserDetails {
     @Column(name = "is_active", nullable = false, columnDefinition = "boolean default true")
     private Boolean isActive = true;
 
-    @OneToMany(fetch = FetchType.LAZY)
+    @OneToMany(
+            mappedBy = "user",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true,
+            fetch = FetchType.LAZY
+    )
+    private List<Address> addresses;
+
+    @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(name = "user_roles",
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "role_id"))
@@ -79,7 +87,10 @@ public class User implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return roles;
+        if(roles == null) return List.of();
+
+        return roles.stream()
+                .map(role -> new SimpleGrantedAuthority(role.getAuthority())).toList();
     }
 
     @Override
@@ -121,6 +132,19 @@ public class User implements UserDetails {
     @PreUpdate
     protected void onUpdate() {
         updatedAt = Instant.now();
+    }
+
+
+    public void addAddress(Address address) {
+
+    }
+
+    public void removeAddress(Address address){
+
+    }
+
+    public Address getDefaultAddress(){
+        return null;
     }
 
 }

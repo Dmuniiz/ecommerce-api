@@ -53,6 +53,11 @@ public class SecurityConfigurations {
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(sn -> sn.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(req -> req
+                        .requestMatchers(
+                                "/v3/api-docs/**",
+                                "/swagger-ui/**",
+                                "/swagger-ui.html"
+                        ).permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/login").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/register").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/refresh-token").permitAll()
@@ -70,8 +75,8 @@ public class SecurityConfigurations {
                         .requestMatchers("/api/v1/users","/api/v1/users/{id}").hasRole("ADMIN")
                         .anyRequest().authenticated())
                .exceptionHandling(ex -> ex
-                       .accessDeniedHandler(accessDeniedException)
                        .authenticationEntryPoint(authenticationEntryPoint)
+                       .accessDeniedHandler(accessDeniedException)
                )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 

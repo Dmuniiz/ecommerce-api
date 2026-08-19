@@ -59,6 +59,7 @@ public class ProductController {
                 .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"));
 
         Page<Product> products;
+
         if (isAdmin) {
             products = productService.findAllProductsForAdmin(status, pageable);
         } else {
