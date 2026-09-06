@@ -1,7 +1,6 @@
 package com.api.e_commerce.payment;
 
 import com.api.e_commerce.order.OrderService;
-import com.api.e_commerce.payment.domain.enums.PaymentProvider;
 import com.api.e_commerce.payment.dto.CreateCheckoutRequest;
 import com.api.e_commerce.payment.dto.PaymentDetailsResponse;
 import com.api.e_commerce.payment.dto.PaymentGatewayResponse;
@@ -98,11 +97,10 @@ public class PaymentController {
         Event event;
 
         try {
-            event = Webhook.constructEvent(
-                    rawPayload, 
-                    sigHeader, 
-                    stripeProperties.getWEBHOOK_SECRET()
+            event = Webhook.constructEvent(rawPayload,  sigHeader, stripeProperties.getWEBHOOK_SECRET()
             );
+            System.out.println(event.getDataObjectDeserializer().getObject());
+            System.out.println(event.getDataObjectDeserializer().getObject().get());
         } catch (SignatureVerificationException e) {
             log.warn("Invalid Stripe webhook signature");
             return ResponseEntity.badRequest().build();
@@ -133,6 +131,7 @@ public class PaymentController {
 
     private void handleCheckoutSessionCompleted(Event event, String rawPayload) {
         try {
+
             Session session = (Session) event.getDataObjectDeserializer().getObject().get();
             String orderId = session.getMetadata().get("orderId");
 
